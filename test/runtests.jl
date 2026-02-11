@@ -1,16 +1,16 @@
-using PkgName
+using PetoiBittle
 using Test
 using Aqua
 using JET
 using TestItemRunner
 
-@testset "PkgName.jl" begin
+@testset "PetoiBittle.jl" begin
     @testset "Code quality (Aqua.jl)" begin
-        Aqua.test_all(PkgName)
+        Aqua.test_all(PetoiBittle)
     end
 
     @testset "Code linting (JET.jl)" begin
-        JET.test_package(PkgName; target_defined_modules = true)
+        JET.test_package(PetoiBittle; target_defined_modules = true)
     end
 
     TestItemRunner.@run_package_tests()

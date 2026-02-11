@@ -1,16 +1,16 @@
-using PkgName
+using PetoiBittle
 using Documenter
 
-DocMeta.setdocmeta!(PkgName, :DocTestSetup, :(using PkgName); recursive = true)
+DocMeta.setdocmeta!(PetoiBittle, :DocTestSetup, :(using PetoiBittle); recursive = true)
 
 makedocs(;
-    modules = [PkgName],
-    authors = "Your Name <your.email@example.com> and contributors",
-    sitename = "PkgName.jl",
+    modules = [PetoiBittle],
+    authors = "Dmitry Bagaev <bvdmitri@gmail.com> and contributors",
+    sitename = "PetoiBittle.jl",
     format = Documenter.HTML(;
-        canonical = "https://username.github.io/PkgName.jl", edit_link = "main", assets = String[]
+        canonical = "https://bvdmitri.github.io/PetoiBittle.jl", edit_link = "main", assets = String[]
     ),
     pages = ["Home" => "index.md"]
 )
 
-deploydocs(; repo = "github.com/username/PkgName.jl", devbranch = "main")
+deploydocs(; repo = "github.com/bvdmitri/PetoiBittle.jl", devbranch = "main")

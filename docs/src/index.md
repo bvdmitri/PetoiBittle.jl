@@ -1,10 +1,16 @@
 ```@meta
-CurrentModule = PkgName
+CurrentModule = PetoiBittle
 ```
 
-# PkgName
+# PetoiBittle
 
-Documentation for [PkgName](https://github.com/username/PkgName.jl).
+Documentation for [PetoiBittle](https://github.com/bvdmitri/PetoiBittle.jl).
+
+## PetoiBittle Constants
+
+```@docs
+PetoiBittle.Constants
+```
 
 
 ```@index

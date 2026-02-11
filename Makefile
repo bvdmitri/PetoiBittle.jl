@@ -31,13 +31,7 @@ help:
 	@echo '  ${YELLOW}deps-docs${RESET}            Install documentation dependencies'
 	@echo '  ${YELLOW}deps-scripts${RESET}         Install script dependencies'
 	@echo '  ${YELLOW}test${RESET}                 Run project tests'
-	@echo '  ${YELLOW}format${RESET}               Format Julia code'
-	@echo '  ${YELLOW}check-format${RESET}         Check Julia code formatting (does not modify files)'
 	@echo '  ${YELLOW}clean${RESET}                Clean all generated files'
-	@echo ''
-	@echo '${GREEN}Benchmark commands:${RESET}'
-	@echo '  ${YELLOW}benchmark${RESET}            Run project benchmarks'
-	@echo '  ${YELLOW}benchmark-compare${RESET}    Run project benchmarks with comparison against specified branch'
 	@echo ''
 	@echo '${GREEN}Help:${RESET}'
 	@echo '  ${YELLOW}help${RESET}                 Show this help message'
@@ -68,18 +62,6 @@ deps-scripts: ## Install script dependencies
 
 test: deps ## Run project tests
 	julia --project -e 'using Pkg; Pkg.test()'
-
-format: deps-scripts ## Format Julia code
-	julia --project=scripts/ scripts/formatter.jl --overwrite
-
-check-format: deps-scripts ## Check Julia code formatting (does not modify files)
-	julia --project=scripts/ scripts/formatter.jl
-
-benchmark: deps-scripts ## Run project benchmarks
-	julia --project=scripts/ scripts/bench.jl
-
-benchmark-compare: deps-scripts ## Run project benchmarks with comparison against specified branch
-	julia --project=scripts/ scripts/bench.jl --compare-branch $(branch)
 
 clean: docs-clean ## Clean all generated files
 	rm -rf .julia/compiled
