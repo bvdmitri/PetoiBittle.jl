@@ -65,14 +65,15 @@ jobs:
           Pkg.develop(PackageSpec(path=pwd()))
           Pkg.instantiate()
       - uses: julia-actions/julia-buildpkg@v1
-      - uses: julia-actions/julia-docdeploy@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
       - name: Run doctests
         shell: julia --project=docs --color=yes {0}
         run: |
           using Documenter: DocMeta, doctest
-          using PkgName
-          DocMeta.setdocmeta!(PkgName, :DocTestSetup, :(using PkgName); recursive=true)
+          using PetoiBittle
+          DocMeta.setdocmeta!(PetoiBittle, :DocTestSetup, :(using PetoiBittle); recursive=true)
           doctest(PkgName)
+      - name: Deploy documentation
+      - uses: julia-actions/julia-docdeploy@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
