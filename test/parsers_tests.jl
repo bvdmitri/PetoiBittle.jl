@@ -1,15 +1,15 @@
 @testsnippet ParsersTestsUtils begin 
-    function number_to_bytes(number)
-        return convert.(UInt8, collect(string(number)))
+    function str_to_bytes(str)
+        return convert.(UInt8, collect(string(str)))
     end
 
-    function numbers_to_bytes(numbers, separator, ending)
+    function strs_to_bytes(strs, separator, ending)
         bytes = UInt8[]
-        nnumbers = length(numbers)
-        for (i, number) in enumerate(numbers)
-            nbytes = number_to_bytes(number)
+        nstrs = length(strs)
+        for (i, number) in enumerate(strs)
+            nbytes = str_to_bytes(number)
             append!(bytes, nbytes)
-            if i !== nnumbers
+            if i !== nstrs
                 push!(bytes, separator)
             end
         end
@@ -20,13 +20,14 @@ end
 @testitem "parse_number" setup=[ParsersTestsUtils] begin
     import PetoiBittle: parse_number
     import PetoiBittle: Constants
+    import JET
     
-    @test parse_number(number_to_bytes("10")) ≈ 10.0
-    @test parse_number(Int, number_to_bytes("10")) === 10
-    @test parse_number(number_to_bytes("123")) ≈ 123
-    @test parse_number(Int, number_to_bytes("123")) === 123
-    @test parse_number(number_to_bytes("-321")) ≈ -321
-    @test parse_number(Int, number_to_bytes("-321")) === -321
+    @test parse_number(str_to_bytes("10")) ≈ 10.0
+    @test parse_number(Int, str_to_bytes("10")) === 10
+    @test parse_number(str_to_bytes("123")) ≈ 123
+    @test parse_number(Int, str_to_bytes("123")) === 123
+    @test parse_number(str_to_bytes("-321")) ≈ -321
+    @test parse_number(Int, str_to_bytes("-321")) === -321
 
     @test parse_number(Float64, [
         Constants.char.nine,
@@ -41,23 +42,42 @@ end
         Constants.char.seven
     ]) ≈ -0.7
 
-    @test parse_number(number_to_bytes("-3.3")) ≈ -3.3
-    @test parse_number(number_to_bytes("-345.378")) ≈ -345.378
-    @test parse_number(number_to_bytes("592.9945")) ≈ 592.9945
+    @test parse_number(str_to_bytes("-3.3")) ≈ -3.3
+    @test parse_number(str_to_bytes("-345.378")) ≈ -345.378
+    @test parse_number(str_to_bytes("592.9945")) ≈ 592.9945
+
+    @testset let bytes = str_to_bytes("-42.42")
+        JET.@test_opt parse_number(bytes)
+    end
+end
+
+@testitem "parse_number with tabs" setup=[ParsersTestsUtils] begin
+    import PetoiBittle: parse_number
+
+    @test parse_number(Float64, str_to_bytes("10\t-3")) ≈ 10.0
+    @test parse_number(Float64, str_to_bytes("-42\t-3")) ≈ -42.0
+    @test parse_number(Float64, str_to_bytes("-42 -3")) ≈ -42.0
+    @test parse_number(Float64, str_to_bytes("-42\n-3")) ≈ -42.0
+    @test parse_number(Float64, str_to_bytes("-42\r\n-3")) ≈ -42.0
 end
 
 @testitem "parse_number with indices" setup=[ParsersTestsUtils] begin 
     import PetoiBittle: parse_number
     import PetoiBittle: Constants
+    import JET
 
-    @testset let bytes = numbers_to_bytes(
+    @testset let bytes = strs_to_bytes(
         ["1", "2"], Constants.char.tab, Constants.char.newline
     ) 
         @test parse_number(Int, bytes, 1, 3) === (1, 3)
         @test parse_number(Int, bytes, 3, 3) === (2, 4)
+        @test parse_number(Float64, bytes, 1, 3) === (1.0, 3)
+        @test parse_number(Float64, bytes, 3, 3) === (2.0, 4)
+        JET.@test_opt parse_number(Int, bytes, 1, 3)
+        JET.@test_opt parse_number(Float64, bytes, 1, 3)
     end
 
-    @testset let bytes = numbers_to_bytes(
+    @testset let bytes = strs_to_bytes(
         ["123", "456"], Constants.char.tab, Constants.char.newline
     )
         @test parse_number(Int, bytes, 1, 1) === (1, 2)
@@ -97,7 +117,7 @@ end
         @test parse_number(Float64, bytes, 4, 5) === (0.0, 5)
     end
      
-    @testset let bytes = numbers_to_bytes(
+    @testset let bytes = strs_to_bytes(
         ["123", "456"], Constants.char.tab, Constants.char.newline
     )
         @test parse_number(Int, bytes, 5, 4 + 1) === (4,   6)

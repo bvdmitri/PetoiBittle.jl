@@ -2,13 +2,14 @@
 """
     parse_number(::Type{T}, bytes)
 
-Parse decimal representation of a number of type `T` from `bytes`
+Parse decimal representation of a number of type `T` from `bytes`.
+Stops at non-digits characters, with the exception of `-` and `.`.
 
 ```jldoctest
 julia> PetoiBittle.parse_number(Int, [ 0x34, 0x32 ])
 42
 
-julia> PetoiBittle.parse_number(Floa64, [ 0x2d, 0x30, 0x2e, 0x35 ])
+julia> PetoiBittle.parse_number(Float64, [ 0x2d, 0x30, 0x2e, 0x35 ])
 -0.5
 ```
 """
@@ -22,10 +23,29 @@ end
 """
     parse_number(bytes)
 
-Short-hand for `parse_number(Float64, ...)`
+Short-hand for `parse_number(Float64, bytes)`.
 """
 parse_number(bytes) = parse_number(Float64, bytes)
 
+"""
+    parse_number(::Type{T}, bytes, firstindex, lastindex)
+
+Parse decimal representation of a number of type `T` from `bytes` at 
+indices between `firstindex` and `lastindex`. Stops at non-digits characters, with the exception of `-` and `.`.
+
+Returns `(result, nextindex)`, where `result` is the actual parsed number
+and `nextindex` is either:
+- an index next to a non-digit character or; 
+- `lastindex + 1`
+
+```jldoctest 
+julia> PetoiBittle.parse_number(Float64, [ 0x34, 0x32 ], 1, 1)
+(4.0, 2)
+
+julia> PetoiBittle.parse_number(Float64, [ 0x34, 0x32 ], 1, 2)
+(42.0, 3)
+```
+"""
 Base.@propagate_inbounds function parse_number(
     ::Type{T}, bytes, firstindex, lastindex
 ) where {T}
