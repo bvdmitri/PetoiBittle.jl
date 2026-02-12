@@ -1,4 +1,4 @@
-.PHONY: help docs docs-serve docs-clean test format check-format clean deps deps-docs deps-scripts benchmark benchmark-compare
+.PHONY: help docs docs-serve docs-clean test clean deps deps-docs deps-scripts
 
 # Colors for terminal output
 ifdef NO_COLOR

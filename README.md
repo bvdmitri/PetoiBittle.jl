@@ -8,6 +8,14 @@
 
 ## About
 
+## Examples 
+
+The repository has a couple of examples implemented in the `examples/` folder. You can run the examples by name, e.g.
+
+```bash
+julia --project examples/0_scan_ports.jl
+```
+
 ## License
 
 This template is licensed under MIT (see the LICENSE file).

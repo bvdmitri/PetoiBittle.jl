@@ -1,14 +1,18 @@
 name = "PetoiBittle"
 uuid = "5bc1ff43-7751-4008-a957-b2449cec208f"
-authors = ["Dmitry Bagaev <bvdmitri@gmail.com>"]
 version = "1.0.0"
+authors = ["Dmitry Bagaev <bvdmitri@gmail.com>"]
+
+[deps]
+LibSerialPort = "a05a14c7-6e3b-5ba9-90a2-45558833e1df"
 
 [compat]
-julia = "1.10"
 Aqua = "0.8"
 JET = "0.9, 0.10"
+LibSerialPort = "0.5.2"
 Test = "1.10"
 TestItemRunner = "1.1"
+julia = "1.10"
 
 [extras]
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
