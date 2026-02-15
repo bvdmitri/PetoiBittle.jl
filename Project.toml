@@ -8,7 +8,7 @@ LibSerialPort = "a05a14c7-6e3b-5ba9-90a2-45558833e1df"
 
 [compat]
 Aqua = "0.8"
-JET = "0.9, 0.10"
+JET = "0.9, 0.10, 0.11"
 LibSerialPort = "0.5.2"
 Test = "1.10"
 TestItemRunner = "1.1"
