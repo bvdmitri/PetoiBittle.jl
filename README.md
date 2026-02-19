@@ -1,9 +1,9 @@
 # PetoiBittle
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://bvdmitri.github.io/PetoiBittle.jl.jl/stable/)
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://bvdmitri.github.io/PetoiBittle.jl.jl/dev/)
-[![Build Status](https://github.com/bvdmitri/PetoiBittle.jl.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/bvdmitri/PetoiBittle.jl.jl/actions/workflows/CI.yml?query=branch%3Amain)
-[![Coverage](https://codecov.io/gh/bvdmitri/PetoiBittle.jl.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/bvdmitri/PetoiBittle.jl.jl)
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://bvdmitri.github.io/PetoiBittle.jl/stable/)
+[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://bvdmitri.github.io/PetoiBittle.jl/dev/)
+[![Build Status](https://github.com/bvdmitri/PetoiBittle.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/bvdmitri/PetoiBittle.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![Coverage](https://codecov.io/gh/bvdmitri/PetoiBittle.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/bvdmitri/PetoiBittle.jl)
 [![Aqua](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 
 ## About
