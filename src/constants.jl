@@ -5,9 +5,9 @@ Constants are united in their respective namespaces.
 The available namespaces are:
 
 - `char`: a list of character codes in `UInt8`
-    - `tab`:     `UInt8` code of the tab character     '\t'
-    - `newline`: `UInt8` code of the newline character '\n'
-    - `caret`:   `UInt8` code of the caret character   '\r'
+    - `tab`:     `UInt8` code of the tab character     '\\t'
+    - `newline`: `UInt8` code of the newline character '\\n'
+    - `caret`:   `UInt8` code of the caret character   '\\r'
     - `zero`:    `UInt8` code of the zero character    '0' (a digit)
     - `one`:     `UInt8` code of the one character     '1' (a digit)
     - `two`:     `UInt8` code of the two character     '2' (a digit)
@@ -18,7 +18,7 @@ The available namespaces are:
     - `seven`:   `UInt8` code of the seven character   '7' (a digit)
     - `eight`:   `UInt8` code of the eight character   '8' (a digit)
     - `nine`:    `UInt8` code of the nine character    '9' (a digit)
-    - `null`:    `UInt8` code of the null character    '\0' (a terminator)
+    - `null`:    `UInt8` code of the null character    '\\0' (a terminator)
     - `dot`:     `UInt8` code of the dot character     '.'
     - `minus`:   `UInt8` code of the minus character   '-'
     - `space`:   `UInt8` code of the space character   ' '
