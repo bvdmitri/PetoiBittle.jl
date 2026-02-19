@@ -8,7 +8,7 @@ function to create the iterator.
 
 ```jldoctest 
 julia> PetoiBittle.iterate_digits(123) |> collect
-3-element Vector{Int}:
+3-element Vector{Int64}:
  1
  2
  3
@@ -38,7 +38,7 @@ intermediate array.
 
 ```jldoctest 
 julia> PetoiBittle.iterate_digits(123) |> collect
-3-element Vector{Int}:
+3-element Vector{Int64}:
  1
  2
  3

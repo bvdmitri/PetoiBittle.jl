@@ -26,7 +26,6 @@ function Base.convert(::Type{MoveJointSpec}, nt::NamedTuple)::MoveJointSpec
     error(err_msg)
 end
 
-
 """
     serialize_to_bytes!(bytes, spec::MoveJointSpec, startidx)
 
@@ -66,7 +65,6 @@ struct MoveJoints{N}
         return MoveJoints(map(m -> convert(MoveJointSpec, m), movements); check_unique = check_unique)
     end
 end
-
 
 """
     serialize_to_bytes!(bytes, task::MoveJoints, startidx)
