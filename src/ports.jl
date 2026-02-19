@@ -7,7 +7,7 @@ Checks if the `port` responds with `Start` and `Bittle` upon connection. Only wa
 
 See also: [`find_bittle_port`](@ref)
 """
-function is_bittle_port(port; timeout = 5)
+function is_bittle_port(port::String; timeout = 5)
     try
         connection = connect(port; timeout = timeout)
         is_bittle = connection isa BittleConnection
@@ -28,7 +28,7 @@ Scan all ports and find the one that returns `true` when calling [`is_bittle_por
 
 See also: [`is_bittle_port`](@ref)
 """
-function find_bittle_port(; individual_port_timeout = 5, verbose = true)
+function find_bittle_port(; individual_port_timeout = 5, verbose = true)::String
     ports = LibSerialPort.get_port_list()
     sort_hint =
         (port) -> begin
@@ -52,7 +52,7 @@ struct BittleConnection
     buffer::Vector{UInt8}
 end
 
-function connect(port; timeout = 5)
+function connect(port::String; timeout = 5)
     sp = LibSerialPort.open(port, 115200; mode = LibSerialPort.SP_MODE_READ_WRITE)
     LibSerialPort.set_read_timeout(sp, timeout)
     LibSerialPort.set_flow_control(sp)
