@@ -14,9 +14,7 @@ julia> PetoiBittle.parse_number(Float64, [ 0x2d, 0x30, 0x2e, 0x35 ])
 ```
 """
 function parse_number(::Type{T}, bytes) where {T}
-    result, _ = @inbounds parse_number(
-        T, bytes, firstindex(bytes), lastindex(bytes)
-    )
+    result, _ = @inbounds parse_number(T, bytes, firstindex(bytes), lastindex(bytes))
     return result
 end
 
@@ -46,10 +44,8 @@ julia> PetoiBittle.parse_number(Float64, [ 0x34, 0x32 ], 1, 2)
 (42.0, 3)
 ```
 """
-Base.@propagate_inbounds function parse_number(
-    ::Type{T}, bytes, firstindex, lastindex
-) where {T}
-    consumed_indices::Int = 0 
+Base.@propagate_inbounds function parse_number(::Type{T}, bytes, firstindex, lastindex) where {T}
+    consumed_indices::Int = 0
     is_negative::Bool = false
     before_point_decimal::Bool = true
     exponent::T = one(T)
@@ -76,7 +72,7 @@ Base.@propagate_inbounds function parse_number(
         end
         number::UInt8 = character - Constants.char.zero
         if before_point_decimal
-            result   = 10 * result + convert(T, T(number))
+            result = 10 * result + convert(T, T(number))
         else
             exponent = convert(T, T(exponent / 10))
             result   = result + convert(T, T(number)) * exponent
@@ -85,5 +81,4 @@ Base.@propagate_inbounds function parse_number(
     result = is_negative ? -result : result
     nextindex = firstindex + consumed_indices
     return (result, nextindex)
-
 end

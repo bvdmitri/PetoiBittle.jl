@@ -26,6 +26,17 @@ serial ports of PetoiBittle directly from bytes
 PetoiBittle.parse_number
 ```
 
+## PetoiBittle serializers
+
+PetoiBittle.jl implements simple serializers to write responses to 
+serial ports of PetoiBittle directly as bytes
+
+```@docs 
+PetoiBittle.serialize_to_bytes!
+PetoiBittle.DigitsIterator
+PetoiBittle.iterate_digits
+```
+
 ## PetoiBittle Constants
 
 ```@docs
