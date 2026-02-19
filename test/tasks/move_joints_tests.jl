@@ -70,15 +70,15 @@ end
         bytes = zeros(UInt8, 1024)
         bytes, nextind = serialize_to_bytes!(bytes, task, 1)
 
-        @test String(filter(!iszero, bytes)) == "I 1 10 2 -10"
-        @test nextind == 13
+        @test String(filter(!iszero, bytes)) == "i1 10 2 -10"
+        @test nextind == 12
     end
 
     @testset let task = MoveJoints((id = 8, angle = -102), (id = 2, angle = 40), (id = 7, angle = 86))
         bytes = zeros(UInt8, 1024)
         bytes, nextind = serialize_to_bytes!(bytes, task, 1)
 
-        @test String(filter(!iszero, bytes)) == "I 8 -102 2 40 7 86"
-        @test nextind == 19
+        @test String(filter(!iszero, bytes)) == "i8 -102 2 40 7 86"
+        @test nextind == 18
     end
 end

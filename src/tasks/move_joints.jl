@@ -75,14 +75,12 @@ Returns the modified `bytes` and the next to last modified index.
 
 ```jldoctest 
 julia> PetoiBittle.serialize_to_bytes!(zeros(UInt8, 16), PetoiBittle.MoveJoints((id = 1, angle = 10), (id = 3, angle = -10)), 1)
-(UInt8[0x49, 0x20, 0x31, 0x20, 0x31, 0x30, 0x20, 0x33, 0x20, 0x2d, 0x31, 0x30, 0x00, 0x00, 0x00, 0x00], 13)
+(UInt8[0x69, 0x31, 0x20, 0x31, 0x30, 0x20, 0x33, 0x20, 0x2d, 0x31, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00], 12)
 ```
 """
 Base.@propagate_inbounds function serialize_to_bytes!(bytes, task::MoveJoints, startidx::Int)
     nextind::Int = startidx
-    bytes[nextind] = convert(UInt8, 'I')
-    nextind = nextind + 1
-    bytes[nextind] = Constants.char.space
+    bytes[nextind] = convert(UInt8, 'i')
     nextind = nextind + 1
 
     isfirst::Bool = true

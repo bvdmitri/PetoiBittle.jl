@@ -8,19 +8,17 @@ Checks if the `port` responds with `Start` and `Bittle` upon connection. Only wa
 See also: [`find_bittle_port`](@ref)
 """
 function is_bittle_port(port; timeout = 5)
-    is_bittle_port_answer::Bool = false
     try
-        sp = LibSerialPort.open(port, 115200; mode = LibSerialPort.SP_MODE_READ)
-        LibSerialPort.set_read_timeout(sp, timeout)
-        LibSerialPort.set_flow_control(sp)
-        LibSerialPort.sp_flush(sp, LibSerialPort.SP_BUF_OUTPUT)
-        output = String(readuntil(sp, "Bittle"))
-        close(sp)
-        is_bittle_port_answer = occursin("Start", output)
-    catch _
-        is_bittle_port_answer = false
+        connection = connect(port; timeout = timeout)
+        is_bittle = connection isa BittleConnection
+        if is_bittle
+            disconnect(connection)
+        end
+        return is_bittle
+    catch e
+        @debug "Is not a bittle port" port error = (e, catch_backtrace())
+        return false
     end
-    return is_bittle_port_answer
 end
 
 """
@@ -46,4 +44,45 @@ function find_bittle_port(; individual_port_timeout = 5, verbose = true)
         end
     end
     error("Could not find Bittle port")
+end
+
+struct BittleConnection
+    port::String
+    sp::LibSerialPort.SerialPort
+    buffer::Vector{UInt8}
+end
+
+function connect(port; timeout = 5)
+    sp = LibSerialPort.open(port, 115200; mode = LibSerialPort.SP_MODE_READ_WRITE)
+    LibSerialPort.set_read_timeout(sp, timeout)
+    LibSerialPort.set_flow_control(sp)
+    LibSerialPort.sp_flush(sp, LibSerialPort.SP_BUF_BOTH)
+    output = String(readuntil(sp, "Bittle"))
+    is_bittle_port_answer = occursin("Start", output)
+    if !is_bittle_port_answer
+        close(sp)
+        error("The provided port `$port` is not a Bittle port")
+    end
+    @debug "Opened Petoi Bittle connection" port
+    return BittleConnection(port, sp, zeros(UInt8, 256))
+end
+
+function send_task(connection::BittleConnection, task)
+    LibSerialPort.sp_drain(connection.sp)
+    buffer, nextind = serialize_to_bytes!(connection.buffer, task, 1)
+    buffer[nextind] = Constants.char.newline
+    @debug "Sending command to Petoi Bittle" command = String(view(copy(buffer), 1:nextind))
+    buffer = copy(buffer)
+    GC.@preserve buffer begin
+        ntransmitted = LibSerialPort.sp_blocking_write(
+            connection.sp.ref, pointer(buffer), nextind, connection.sp.write_timeout_ms
+        )
+        @assert ntransmitted == nextind "The amount of transmitted bytes is not equal to the buffer size"
+        LibSerialPort.sp_drain(connection.sp)
+    end
+end
+
+function disconnect(connection::BittleConnection)
+    close(connection.sp)
+    @debug "Closed Petoi Bittle connection" connection.port
 end
