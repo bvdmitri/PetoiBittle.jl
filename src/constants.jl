@@ -21,6 +21,7 @@ The available namespaces are:
     - `null`:    `UInt8` code of the null character    '\0' (a terminator)
     - `dot`:     `UInt8` code of the dot character     '.'
     - `minus`:   `UInt8` code of the minus character   '-'
+    - `space`:   `UInt8` code of the space character   ' '
 
 ```jldoctest
 julia> PetoiBittle.Constants.char.tab
@@ -45,5 +46,6 @@ module Constants
         null    = convert(UInt8, '\0'),
         dot     = convert(UInt8, '.'),
         minus   = convert(UInt8, '-'),
+        space   = convert(UInt8, ' ')
     )
 end

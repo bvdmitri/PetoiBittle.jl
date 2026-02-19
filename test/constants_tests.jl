@@ -17,4 +17,5 @@
     @test convert(Char, Constants.char.null)    == '\0'
     @test convert(Char, Constants.char.dot)     == '.'
     @test convert(Char, Constants.char.minus)   == '-'
+    @test convert(Char, Constants.char.space)   == ' '
 end

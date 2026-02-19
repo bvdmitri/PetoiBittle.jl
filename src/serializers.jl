@@ -77,10 +77,11 @@ function Base.iterate(::DigitsIterator, state::Tuple{Int, Int})
 end
 
 """
-    serialize_to_bytes!(bytes, number, startidx)
+    serialize_to_bytes!(bytes, number::Int, startidx)
 
 Write the `number` digit by digit to `bytes` starting at `startidx`.
 Negative number start with the `-` character (`0x2d`, see [`PetoiBittle.Constants`](@ref))
+Returns the modified `bytes` and the next to last modified index.
 """
 Base.@propagate_inbounds function serialize_to_bytes!(bytes, number::Int, startidx::Int)
     nextind = startidx
