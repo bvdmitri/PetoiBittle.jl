@@ -2,9 +2,8 @@
 """
     DigitsIterator
 
-A special iterator that iterates over digits of a number `Int`.
-Do not use this structure directly, use the [`PetoiBittle.iterate_digits`](@ref)
-function to create the iterator.
+A special iterator that iterates over digits of a number `Int` without allocating 
+an intermediate array. Use the [`PetoiBittle.iterate_digits`](@ref) function to create the iterator.
 
 ```jldoctest 
 julia> PetoiBittle.iterate_digits(123) |> collect

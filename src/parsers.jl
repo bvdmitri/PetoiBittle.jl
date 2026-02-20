@@ -28,8 +28,9 @@ parse_number(bytes) = parse_number(Float64, bytes)
 """
     parse_number(::Type{T}, bytes, firstindex, lastindex)
 
-Parse decimal representation of a number of type `T` from `bytes` at 
-indices between `firstindex` and `lastindex`. Stops at non-digits characters, with the exception of `-` and `.`.
+Parse decimal representation of a number of type `T` from `bytes` between `firstindex` and `lastindex`. 
+The `firstindex` and `lastindex` should be valid indices of `bytes`.
+Stops at non-digits characters, with the exception of `-` and `.`.
 
 Returns `(result, nextindex)`, where `result` is the actual parsed number
 and `nextindex` is either:

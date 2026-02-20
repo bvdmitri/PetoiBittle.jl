@@ -8,6 +8,8 @@
 
 ## About
 
+This repository contains a Julia package to connect to and control Petoi Bittle robot dog.
+
 ## Examples 
 
 The repository has a couple of examples implemented in the `examples/` folder. You can run the examples by name, e.g.
