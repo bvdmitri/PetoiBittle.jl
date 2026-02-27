@@ -23,7 +23,8 @@ end
 
 Base.@propagate_inbounds function serialize_to_bytes!(bytes, ::GyroCalibrate, startidx::Int)
     bytes[startidx] = 'g'
-    return bytes, startidx + 1
+    bytes[startidx + 1] = 'c'
+    return bytes, startidx + 2
 end
 
 function before_command(::Connection, command::GyroCalibrate)

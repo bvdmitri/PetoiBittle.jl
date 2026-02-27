@@ -5,13 +5,13 @@
     rbytes, nextind = serialize_to_bytes!(bytes, GyroCalibrate(), 1)
 
     @test bytes === rbytes
-    @test nextind == 2
-    @test bytes == UInt8['g', 0, 0, 0]
+    @test nextind == 3
+    @test bytes == UInt8['g', 'c', 0, 0]
 
     bytes = zeros(UInt8, 4)
     rbytes, nextind = serialize_to_bytes!(bytes, GyroCalibrate(), 3)
 
     @test bytes === rbytes
-    @test nextind == 4
-    @test bytes == UInt8[0, 0, 'g', 0]
+    @test nextind == 5
+    @test bytes == UInt8[0, 0, 'g', 'c']
 end
