@@ -1,3 +1,9 @@
+"""
+    GyroStats
+
+A command with no arguments. Returns [`PetoiBittle.GyroStatsOutput`](@ref)
+with statistics for the connected gyro.
+"""
 struct GyroStats <: Command end
 
 Base.@propagate_inbounds function serialize_to_bytes!(bytes, command::GyroStats, startidx::Int)
@@ -5,6 +11,20 @@ Base.@propagate_inbounds function serialize_to_bytes!(bytes, command::GyroStats,
     return bytes, startidx + 1
 end
 
+"""
+    GyroStatsOutput
+
+This structure is returned after executing [`PetoiBittle.GyroStats`](@ref) command 
+with the [`PetoiBittle.send_command`](@ref).
+
+Has the following fields:
+- yaw
+- pitch
+- roll
+- acceleration_x
+- acceleration_y
+- acceleration_z
+"""
 struct GyroStatsOutput
     yaw::Float64
     pitch::Float64

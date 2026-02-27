@@ -5,6 +5,9 @@ To interact with the robot, the library exposes a [`PetoiBittle.Command`](@ref) 
 ```@docs
 PetoiBittle.Command
 PetoiBittle.command_return_type
+PetoiBittle.NoResponse
+PetoiBittle.validate_return_type
+PetoiBittle.deserialize_from_bytes
 PetoiBittle.send_command
 ```
 
@@ -27,6 +30,13 @@ subtypes(PetoiBittle.Command)
 ```@docs
 PetoiBittle.MoveJoints
 PetoiBittle.MoveJointSpec
+```
+
+## Gyro statistics
+
+```@docs 
+PetoiBittle.GyroStats
+PetoiBittle.GyroStatsOutput
 ```
 
 

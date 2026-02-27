@@ -62,6 +62,23 @@ See also: [`PetoiBittle.deserialize_from_bytes`](@ref)
 command_return_type(::Type{T}) where {T <: Command} = NoResponse
 
 """
+    validate_return_type(bytes, ::Type, startidx, endidx)
+
+Validates that the content in `bytes` between `startidx` and `endidx` can be 
+deserialized into the specified `Type`. See [`PetoiBittle.command_return_type`](@ref)
+for more details.
+"""
+validate_return_type(bytes, ::Type{NoResponse}, _, _) = true
+
+"""
+    deserialize_from_bytes(bytes, ::Type, startidx, endidx)
+
+Deserializes that the content in `bytes` between `startidx` and `endidx` into `Type`. 
+See [`PetoiBittle.command_return_type`](@ref) for more details.
+"""
+deserialize_from_bytes(bytes, ::Type{NoResponse}, _, _) = nothing
+
+"""
     send_command(connection::Connection, command::Command)
 
 A function to send a command to a Bittle robot through opened [`PetoiBittle.Connection`](@ref).
