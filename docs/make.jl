@@ -10,7 +10,7 @@ makedocs(;
     format = Documenter.HTML(;
         canonical = "https://bvdmitri.github.io/PetoiBittle.jl", edit_link = "main", assets = String[]
     ),
-    pages = ["Home" => "index.md"]
+    pages = ["Home" => "index.md", "Commands" => "commands.md"]
 )
 
 deploydocs(; repo = "github.com/bvdmitri/PetoiBittle.jl", devbranch = "main")

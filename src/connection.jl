@@ -10,7 +10,7 @@ See also: [`find_bittle_port`](@ref)
 function is_bittle_port(port::String; timeout = 5)
     try
         connection = connect(port; timeout = timeout)
-        is_bittle = connection isa BittleConnection
+        is_bittle = connection isa Connection
         if is_bittle
             disconnect(connection)
         end
@@ -46,12 +46,27 @@ function find_bittle_port(; individual_port_timeout = 5, verbose = true)::String
     error("Could not find Bittle port")
 end
 
-struct BittleConnection
+"""
+    Connection
+
+A connection to Petoi Bittle robot. Use [`PetoiBittle.connect`](@ref) to open 
+a connection.
+"""
+struct Connection
     port::String
     sp::LibSerialPort.SerialPort
     buffer::Vector{UInt8}
 end
 
+"""
+    connect(port::String; [timeout = 5])
+
+Open a [`PetoiBittle.Connection`](@ref) at a specified `port`. Try for no longer 
+than `timeout`. The port must be manually [`PetoiBittle.disconnect`](@ref)-ed 
+when unneeded.
+
+See [`PetoiBittle.is_bittle_port`](@ref) and [`PetoiBittle.find_bittle_port`](@ref).
+"""
 function connect(port::String; timeout = 5)
     sp = LibSerialPort.open(port, 115200; mode = LibSerialPort.SP_MODE_READ_WRITE)
     LibSerialPort.set_read_timeout(sp, timeout)
@@ -64,25 +79,17 @@ function connect(port::String; timeout = 5)
         error("The provided port `$port` is not a Bittle port")
     end
     @debug "Opened Petoi Bittle connection" port
-    return BittleConnection(port, sp, zeros(UInt8, 256))
+    return Connection(port, sp, zeros(UInt8, 256))
 end
 
-function send_task(connection::BittleConnection, task)
-    LibSerialPort.sp_drain(connection.sp)
-    buffer, nextind = serialize_to_bytes!(connection.buffer, task, 1)
-    buffer[nextind] = Constants.char.newline
-    @debug "Sending command to Petoi Bittle" command = String(view(copy(buffer), 1:nextind))
-    buffer = copy(buffer)
-    GC.@preserve buffer begin
-        ntransmitted = LibSerialPort.sp_blocking_write(
-            connection.sp.ref, pointer(buffer), nextind, connection.sp.write_timeout_ms
-        )
-        @assert ntransmitted == nextind "The amount of transmitted bytes is not equal to the buffer size"
-        LibSerialPort.sp_drain(connection.sp)
-    end
-end
+"""
+    disconnect(connection::Connection)
 
-function disconnect(connection::BittleConnection)
+Disconnects the `connection`. 
+
+See also: [`PetoiBittle.Connection`](@ref), [`PetoiBittle.connect`](@ref)
+"""
+function disconnect(connection::Connection)
     close(connection.sp)
     @debug "Closed Petoi Bittle connection" connection.port
 end

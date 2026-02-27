@@ -23,7 +23,7 @@ for angle in 0:-2:-70
         (id = 10, angle = 0),
         (id = 14, angle = 0)
     )
-    PetoiBittle.send_task(connection, task)
+    PetoiBittle.send_command(connection, task)
     sleep(0.2)
 end
 
