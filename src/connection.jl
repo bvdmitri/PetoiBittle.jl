@@ -63,13 +63,14 @@ end
 
 Open a [`PetoiBittle.Connection`](@ref) at a specified `port`. Try for no longer 
 than `timeout`. The port must be manually [`PetoiBittle.disconnect`](@ref)-ed 
-when unneeded.
+when unneeded. The timeout is also being used to set read and write timeouts.
 
 See [`PetoiBittle.is_bittle_port`](@ref) and [`PetoiBittle.find_bittle_port`](@ref).
 """
 function connect(port::String; timeout = 5)
     sp = LibSerialPort.open(port, 115200; mode = LibSerialPort.SP_MODE_READ_WRITE)
     LibSerialPort.set_read_timeout(sp, timeout)
+    LibSerialPort.set_write_timeout(sp, timeout)
     LibSerialPort.set_flow_control(sp)
     LibSerialPort.sp_flush(sp, LibSerialPort.SP_BUF_BOTH)
     output = String(readuntil(sp, "Bittle"))
@@ -102,6 +103,18 @@ end
 
 function Base.show(io::IO, buffered::BufferedString)
     for i in (buffered.startidx):(buffered.stopidx)
-        print(io, convert(Char, buffered.buffer[i]))
+        character = buffered.buffer[i]
+        if character === Constants.char.newline
+            print(io, '\\')
+            print(io, 'n')
+        elseif character === Constants.char.tab
+            print(io, '\\')
+            print(io, 't')
+        elseif character === Constants.char.caret
+            print(io, '\\')
+            print(io, 'r')
+        else
+            print(io, convert(Char, buffered.buffer[i]))
+        end
     end
 end

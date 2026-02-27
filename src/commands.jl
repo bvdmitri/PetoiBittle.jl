@@ -32,13 +32,24 @@ PetoiBittle.command_return_type(::Type{<:MySpecificCommand}) = MySpecificCommand
 ```
 as well as 
 ```julia
-function PetoiBittle.deserialize_from_bytes(bytes, ::Type{MySpecificCommandResponse}, startidx)
+function PetoiBittle.deserialize_from_bytes(bytes, ::Type{MySpecificCommandResponse}, startidx, endidx)
     # ...
     return MySpecificCommandResponse(...)
 end
 ```
 to deserialize the response from raw bytes. The `bytes` will contain everything 
 that has been captured after the command has been sent until the `\n` symbol.
+
+In this case, a command should also implement
+```julia
+function PetoiBittle.validate_return_type(bytes, ::Type{MySpecificCommandResponse}, startidx, endidx)
+    return true # false
+end
+```
+to validate the content in `bytes`. The [`PetoiBittle.validate_return_type`](@ref) will
+be called before [`PetoiBittle.deserialize_from_bytes`](@ref). If the validate function 
+returns `false`, the [`PetoiBittle.send_command`](@ref) discards the content in 
+`bytes` and read the output again. 
 
 Default return type is assumed to be [`PetoiBittle.NoResponse`], which is a convention 
 that the command does not have any response. In this case the return value of the 
@@ -66,7 +77,9 @@ See also: [`PetoiBittle.Command`](@ref)
 function send_command(connection::Connection, command::Command)
     LibSerialPort.sp_drain(connection.sp)
     LibSerialPort.sp_flush(connection.sp, LibSerialPort.SP_BUF_BOTH)
-    buffer, nextind = serialize_to_bytes!(connection.buffer, command, 1)
+    buffer::Vector{UInt8} = connection.buffer
+    nextind::Int = 1
+    buffer, nextind = serialize_to_bytes!(buffer, command, nextind)
     buffer[nextind] = Constants.char.newline
     @debug "Sending command to Petoi Bittle" command = BufferedString(buffer, 1, nextind)
     GC.@preserve buffer begin
@@ -80,9 +93,13 @@ function send_command(connection::Connection, command::Command)
         if R === NoResponse
             return nothing
         else
-            stop_reading_output = false
-            readind = 0
-            while !stop_reading_output
+            # Is a simple guard to avoid infinite loops
+            # technically we should just timeout on read and never reach this
+            maximum_nr_of_retries::Int = 5
+            current_attempt::Int = 1
+            stop_reading_output::Bool = false
+            readind::Int = 0
+            while !stop_reading_output || current_attempt > maximum_nr_of_retries
                 nread = LibSerialPort.sp_blocking_read(
                     connection.sp.ref, pointer(buffer) + readind, 1, connection.sp.read_timeout_ms
                 )
@@ -90,11 +107,18 @@ function send_command(connection::Connection, command::Command)
                 readind += nread
                 @inbounds last_character = buffer[readind]
                 if last_character === Constants.char.newline
-                    stop_reading_output = true
+                    if validate_return_type(buffer, R, 1, readind)
+                        stop_reading_output = true
+                    else
+                        @debug "Discarding output" output = BufferedString(buffer, 1, readind)
+                        current_attempt += 1
+                        readind = 0
+                    end
                 end
             end
+            @assert current_attempt <= maximum_nr_of_retries "The output of the command could not be read"
             @debug "Read output" output = BufferedString(buffer, 1, readind)
-            return deserialize_from_bytes(buffer, R, 1)
+            return @inbounds deserialize_from_bytes(buffer, R, 1, readind)
         end
     end
 end

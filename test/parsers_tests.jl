@@ -159,3 +159,26 @@ end
     end
 
 end
+
+@testitem "Parse number should parse a series of numbers in a single buffer" begin 
+    import PetoiBittle: parse_number
+
+    buffer_str = "1.90118\t-6.48583\t2.21230\t-1092\t355\t8089\r\n"
+    bytes = Iterators.map(c -> convert(UInt8, c), buffer_str) |> collect
+    firstindex = 1
+    lastindex = length(bytes)
+
+    v1, nextind = parse_number(Float64, bytes, firstindex, lastindex)
+    v2, nextind = parse_number(Float64, bytes, nextind, lastindex)
+    v3, nextind = parse_number(Float64, bytes, nextind, lastindex)
+    v4, nextind = parse_number(Int, bytes, nextind, lastindex)
+    v5, nextind = parse_number(Int, bytes, nextind, lastindex)
+    v6, nextind = parse_number(Int, bytes, nextind, lastindex)
+
+    @test v1 ≈ 1.90118
+    @test v2 ≈ -6.48583
+    @test v3 ≈ 2.21230
+    @test v4 == -1092
+    @test v5 == 355
+    @test v6 == 8089
+end
