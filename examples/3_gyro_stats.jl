@@ -15,11 +15,9 @@ sleep(5)
 
 @info "Getting into calibration position"
 PetoiBittle.send_command(connection, PetoiBittle.Skill("calib"))
-sleep(2)
 
 @info "Calibrating gyro"
 PetoiBittle.send_command(connection, PetoiBittle.GyroCalibrate())
-sleep(20)
 
 @info "Starting collecting measurements"
 measurements = []

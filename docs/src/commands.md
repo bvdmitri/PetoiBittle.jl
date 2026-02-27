@@ -4,6 +4,8 @@ To interact with the robot, the library exposes a [`PetoiBittle.Command`](@ref) 
 
 ```@docs
 PetoiBittle.Command
+PetoiBittle.before_command
+PetoiBittle.after_command
 PetoiBittle.command_return_type
 PetoiBittle.NoResponse
 PetoiBittle.validate_return_type

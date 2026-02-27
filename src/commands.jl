@@ -11,7 +11,7 @@ julia> subtypes(PetoiBittle.Command)
 ```
 to get the list of all available commands.
 
-See also: [`PetoiBittle.send_command`](@ref)
+See also: [`PetoiBittle.send_command`](@ref), [`before_command`](@ref), [`after_command`](@ref)
 """
 abstract type Command end
 
@@ -79,6 +79,28 @@ See [`PetoiBittle.command_return_type`](@ref) for more details.
 deserialize_from_bytes(bytes, ::Type{NoResponse}, _, _) = nothing
 
 """
+    before_command(connection::Connection, command::Command)
+
+A callback that is being called right before sending the command over the `connection`.
+A more specific `Command` can add custom logic that needs to be executed 
+right before sending the command. By default does nothing.
+
+See also: [`after_command`](@ref)
+"""
+before_command(::Connection, ::Command) = nothing
+
+"""
+    after_command(connection::Connection, command::Command)
+
+A callback that is being called right after sending the command over the `connection`
+but before reading the output. A more specific `Command` can add custom logic that needs to be executed 
+right after sending the command. By default does nothing.
+
+See also: [`before_command`](@ref)
+"""
+after_command(::Connection, ::Command) = nothing
+
+"""
     send_command(connection::Connection, command::Command)
 
 A function to send a command to a Bittle robot through opened [`PetoiBittle.Connection`](@ref).
@@ -89,7 +111,7 @@ julia> subtypes(PetoiBittle.Command)
 ```
 to get the list of all available commands.
 
-See also: [`PetoiBittle.Command`](@ref)
+See also: [`PetoiBittle.Command`](@ref), [`before_command`](@ref), [`after_command`](@ref)
 """
 function send_command(connection::Connection, command::Command)
     LibSerialPort.sp_drain(connection.sp)
@@ -100,11 +122,13 @@ function send_command(connection::Connection, command::Command)
     buffer[nextind] = Constants.char.newline
     @debug "Sending command to Petoi Bittle" command = BufferedString(buffer, 1, nextind)
     GC.@preserve buffer begin
+        before_command(connection, command)
         ntransmitted = LibSerialPort.sp_blocking_write(
             connection.sp.ref, pointer(buffer), nextind, connection.sp.write_timeout_ms
         )
         @assert ntransmitted == nextind "The amount of transmitted bytes is not equal to the buffer size"
         LibSerialPort.sp_drain(connection.sp)
+        after_command(connection, command)
 
         R = command_return_type(typeof(command))
         if R === NoResponse
