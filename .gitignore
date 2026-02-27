@@ -56,6 +56,10 @@ benchmark/results/
 benchmark/*.csv
 benchmark/*.json
 
+# Example results
+examples/*png
+examples/*jpg
+
 # Test coverage
 coverage/
 *.lcov

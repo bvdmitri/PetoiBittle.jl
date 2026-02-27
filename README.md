@@ -15,7 +15,8 @@ This repository contains a Julia package to connect to and control Petoi Bittle 
 The repository has a couple of examples implemented in the `examples/` folder. You can run the examples by name, e.g.
 
 ```bash
-julia --project examples/0_scan_ports.jl
+julia --project=examples -e 'using Pkg; Pkg.instantiate()'
+julia --project=examples examples/0_scan_ports.jl
 ```
 
 ## License
