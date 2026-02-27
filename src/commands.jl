@@ -65,27 +65,36 @@ See also: [`PetoiBittle.Command`](@ref)
 """
 function send_command(connection::Connection, command::Command)
     LibSerialPort.sp_drain(connection.sp)
+    LibSerialPort.sp_flush(connection.sp, LibSerialPort.SP_BUF_BOTH)
     buffer, nextind = serialize_to_bytes!(connection.buffer, command, 1)
     buffer[nextind] = Constants.char.newline
-    @debug "Sending command to Petoi Bittle" command = String(view(copy(buffer), 1:nextind))
-    buffer = copy(buffer)
+    @debug "Sending command to Petoi Bittle" command = BufferedString(buffer, 1, nextind)
     GC.@preserve buffer begin
         ntransmitted = LibSerialPort.sp_blocking_write(
             connection.sp.ref, pointer(buffer), nextind, connection.sp.write_timeout_ms
         )
         @assert ntransmitted == nextind "The amount of transmitted bytes is not equal to the buffer size"
         LibSerialPort.sp_drain(connection.sp)
-        return __get_command_output(connection, command)
-    end
-end
 
-# A private function, retrieves an output of a command
-# The command is assumed to be executed
-function __get_command_output(connection::Connection, command::T) where {T <: Command}
-    R = command_return_type(T)
-    if R === NoResponse
-        return nothing
-    else
-        error("Not implemented")
+        R = command_return_type(typeof(command))
+        if R === NoResponse
+            return nothing
+        else
+            stop_reading_output = false
+            readind = 0
+            while !stop_reading_output
+                nread = LibSerialPort.sp_blocking_read(
+                    connection.sp.ref, pointer(buffer) + readind, 1, connection.sp.read_timeout_ms
+                )
+                @assert nread >= 1 "The amount of read bytes is less than 1 after timeout"
+                readind += nread
+                @inbounds last_character = buffer[readind]
+                if last_character === Constants.char.newline
+                    stop_reading_output = true
+                end
+            end
+            @debug "Read output" output = BufferedString(buffer, 1, readind)
+            return deserialize_from_bytes(buffer, R, 1)
+        end
     end
 end

@@ -93,3 +93,15 @@ function disconnect(connection::Connection)
     close(connection.sp)
     @debug "Closed Petoi Bittle connection" connection.port
 end
+
+struct BufferedString
+    buffer::Vector{UInt8}
+    startidx::Int
+    stopidx::Int
+end
+
+function Base.show(io::IO, buffered::BufferedString)
+    for i in (buffered.startidx):(buffered.stopidx)
+        print(io, convert(Char, buffered.buffer[i]))
+    end
+end

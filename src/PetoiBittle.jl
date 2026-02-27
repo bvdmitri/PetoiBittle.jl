@@ -6,4 +6,5 @@ include("connection.jl")
 
 include("commands.jl")
 include("commands/move_joints.jl")
+include("commands/gyro_stats.jl")
 end
