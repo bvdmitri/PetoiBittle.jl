@@ -34,9 +34,20 @@ function before_command(::Connection, command::GyroCalibrate)
     sleep(command.wait_before)
 end
 
-function after_command(::Connection, command::GyroCalibrate)
+function after_command(connection::Connection, command::GyroCalibrate)
     if command.verbose
         @info lazy"Calibrating gyro for $(command.wait_after) seconds"
     end
     sleep(command.wait_after)
+    send_command(connection, GyroCalibrateSave())
+    if command.verbose 
+        @info "Gyro has been calibrated"
+    end
+end
+
+struct GyroCalibrateSave <: Command end
+
+Base.@propagate_inbounds function serialize_to_bytes!(bytes, ::GyroCalibrateSave, startidx::Int)
+    bytes[startidx] = 's'
+    return bytes, startidx + 1
 end

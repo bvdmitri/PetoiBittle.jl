@@ -18,12 +18,14 @@ PetoiBittle.send_command(connection, PetoiBittle.Skill("calib"))
 
 @info "Calibrating gyro"
 PetoiBittle.send_command(connection, PetoiBittle.GyroCalibrate())
+
+sleep_between = 0.05 # in seconds
+
 @info "Collecting measurements for sensor noise estimation"
 
 measurement_for_noise_estimations = []
 
 time_to_collect = 5 # in seconds
-sleep_between = 0.1 # in seconds
 n_measurement_for_noise_estimations = time_to_collect / sleep_between
 
 for i in 1:n_measurement_for_noise_estimations
@@ -113,8 +115,7 @@ RxInfer.start(engine)
 
 @info "Move the PetoiBittle now"
 
-time_to_collect = 30 # in seconds
-sleep_between = 0.1 # in seconds
+time_to_collect = 20 # in seconds
 n_measurements = time_to_collect / sleep_between
 
 for i in 1:n_measurements
