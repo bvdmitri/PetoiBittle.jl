@@ -1,5 +1,5 @@
 """
-    GyroStats
+    GyroStats()
 
 A command with no arguments. Returns [`PetoiBittle.GyroStatsOutput`](@ref)
 with statistics for the connected gyro.

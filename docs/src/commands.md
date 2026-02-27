@@ -25,18 +25,14 @@ subtypes(PetoiBittle.Command)
 !!! note
     This command only works in Julia REPL.
 
-## Move joints
-
 ```@docs
+PetoiBittle.Rest
+PetoiBittle.Skill
 PetoiBittle.MoveJoints
 PetoiBittle.MoveJointSpec
-```
-
-## Gyro statistics
-
-```@docs 
 PetoiBittle.GyroStats
 PetoiBittle.GyroStatsOutput
+PetoiBittle.GyroCalibrate
 ```
 
 
