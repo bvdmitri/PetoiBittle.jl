@@ -14,7 +14,7 @@ connection = PetoiBittle.connect(port)
 sleep(5)
 
 @info "Getting into calibration position"
-PetoiBittle.send_command(connection, PetoiBittle.Rest())
+PetoiBittle.send_command(connection, PetoiBittle.Skill("calib"))
 sleep(2)
 
 @info "Calibrating gyro"
