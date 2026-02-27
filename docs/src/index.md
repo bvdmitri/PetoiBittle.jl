@@ -6,13 +6,17 @@ CurrentModule = PetoiBittle
 
 Documentation for [PetoiBittle](https://github.com/bvdmitri/PetoiBittle.jl).
 
-## PetoiBittle ports
+## PetoiBittle connection
 
-PetoiBittle.jl implements convenience functions to find and/or check if a port is connected to Petoi Bittle Dog robot. 
+PetoiBittle.jl implements convenience functions to find and/or check if a port is connected to Petoi Bittle Dog robot as well as 
+establish a connection with a given port.
 
 ```@docs 
 PetoiBittle.is_bittle_port
 PetoiBittle.find_bittle_port
+PetoiBittle.Connection
+PetoiBittle.connect
+PetoiBittle.disconnect
 ```
 
 Users can also use `PetoiBittle.LibSerialPort.get_port_list` to get a list of all ports compatible with `LibSerialPort`.

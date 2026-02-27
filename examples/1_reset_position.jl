@@ -22,7 +22,7 @@ task = PetoiBittle.MoveJoints(
     (id = 10, angle = 0),
     (id = 14, angle = 0)
 )
-PetoiBittle.send_task(connection, task)
+PetoiBittle.send_command(connection, task)
 
 @info "Sleeping before disconnecting for 5seconds..."
 sleep(5)
