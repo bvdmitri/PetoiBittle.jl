@@ -12,6 +12,33 @@ CurrentModule = PetoiBittle
 
 Documentation for [PetoiBittle](https://github.com/bvdmitri/PetoiBittle.jl).
 
+PetoiBittle.jl drives [Petoi](https://www.petoi.com) Bittle / OpenCat robots over a serial
+port. It pairs a fast, zero-allocation low-level command layer with high-level convenience
+verbs so beginners can get moving in a few lines while advanced users keep full control.
+
+## Quick start
+
+```julia
+using PetoiBittle
+
+# find and connect to the robot
+connection = PetoiBittle.connect(PetoiBittle.find_bittle_port())
+
+# high-level verbs
+PetoiBittle.sit(connection)
+PetoiBittle.walk_forward(connection)
+PetoiBittle.balance(connection)
+
+# the equivalent low-level form
+PetoiBittle.send_command(connection, PetoiBittle.WalkForward())
+
+PetoiBittle.disconnect(connection)
+```
+
+See the [Commands overview](commands/overview.md) for the full list of commands, the
+convenience verbs, and per-category guides (gaits, postures, behaviors, joint control,
+control & state, sound, and low-level primitives).
+
 ## PetoiBittle connection
 
 PetoiBittle.jl implements convenience functions to find and/or check if a port is connected to Petoi Bittle Dog robot as well as 
