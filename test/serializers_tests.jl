@@ -56,3 +56,72 @@ end
     @test bytes == [0x2d, 0x31, 0x2d, 0x39]
 
 end
+
+@testitem "_serialize_token! writes the token bytes verbatim" begin
+    import PetoiBittle: _serialize_token!
+
+    # "ksit" -> 'k','s','i','t' starting at index 1; nextind is one-past the token.
+    bytes = zeros(UInt8, 8)
+    @test _serialize_token!(bytes, "ksit", 1) == (bytes, 5)
+    @test bytes[1:4] == [0x6b, 0x73, 0x69, 0x74]
+    @test bytes[5:end] == zeros(UInt8, 4)
+
+    # Honours a non-1 start index and returns the correct next index.
+    fill!(bytes, 0)
+    @test _serialize_token!(bytes, "kwkF", 3) == (bytes, 7)
+    @test bytes[3:6] == [0x6b, 0x77, 0x6b, 0x46]
+
+    # A single-character token.
+    fill!(bytes, 0)
+    @test _serialize_token!(bytes, "d", 1) == (bytes, 2)
+    @test bytes[1] == convert(UInt8, 'd')
+
+    # Any `AbstractString` works, not just `String` (e.g. a `SubString`).
+    fill!(bytes, 0)
+    sub = SubString("xkwkFx", 2, 5)
+    @test sub isa SubString
+    @test _serialize_token!(bytes, sub, 1) == (bytes, 5)
+    @test bytes[1:4] == [0x6b, 0x77, 0x6b, 0x46]
+end
+
+@testitem "_serialize_token! does not allocate" begin
+    import PetoiBittle: _serialize_token!
+    import JET
+
+    bytes = zeros(UInt8, 8)
+    JET.@test_opt _serialize_token!(bytes, "ksit", 1)
+
+    # Measure behind a function barrier so untyped test-module globals do not box.
+    probe(buf) = @allocated _serialize_token!(buf, "ksit", 1)
+    probe(bytes) # warm up / compile
+    @test probe(bytes) == 0
+end
+
+@testitem "_serialize_raw_i8! writes one signed byte" begin
+    import PetoiBittle: _serialize_raw_i8!
+
+    bytes = zeros(UInt8, 4)
+    # Positive values pass through unchanged.
+    @test _serialize_raw_i8!(bytes, 30, 1) == (bytes, 2)
+    @test bytes[1] == 0x1e
+
+    # Negative values are written as their two's-complement byte (-1 -> 0xff, -90 -> 0xa6).
+    fill!(bytes, 0)
+    @test _serialize_raw_i8!(bytes, -1, 1) == (bytes, 2)
+    @test bytes[1] == 0xff
+    fill!(bytes, 0)
+    @test _serialize_raw_i8!(bytes, -90, 1) == (bytes, 2)
+    @test bytes[1] == reinterpret(UInt8, Int8(-90))
+
+    # The boundary values of a signed byte are accepted.
+    fill!(bytes, 0)
+    @test _serialize_raw_i8!(bytes, 127, 1)[2] == 2
+    @test bytes[1] == 0x7f
+    fill!(bytes, 0)
+    @test _serialize_raw_i8!(bytes, -128, 1)[2] == 2
+    @test bytes[1] == 0x80
+
+    # Out-of-range values must error rather than silently wrap.
+    @test_throws "range" _serialize_raw_i8!(bytes, 128, 1)
+    @test_throws "range" _serialize_raw_i8!(bytes, -129, 1)
+end

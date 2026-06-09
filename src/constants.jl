@@ -22,6 +22,7 @@ The available namespaces are:
     - `dot`:     `UInt8` code of the dot character     '.'
     - `minus`:   `UInt8` code of the minus character   '-'
     - `space`:   `UInt8` code of the space character   ' '
+    - `tilde`:   `UInt8` code of the tilde character   '~' (a binary command terminator)
 
 ```jldoctest
 julia> PetoiBittle.Constants.char.tab
@@ -46,6 +47,7 @@ module Constants
         null    = convert(UInt8, '\0'),
         dot     = convert(UInt8, '.'),
         minus   = convert(UInt8, '-'),
-        space   = convert(UInt8, ' ')
+        space   = convert(UInt8, ' '),
+        tilde   = convert(UInt8, '~')
     )
 end

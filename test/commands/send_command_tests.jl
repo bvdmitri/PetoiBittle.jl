@@ -40,6 +40,89 @@
     const VALID_GYRO_LINE = str_to_bytes("\t1\t-3\t4.1\t2\t4\t7\r\n")
 end
 
+@testsnippet TerminatorCommands begin
+    import PetoiBittle: Command, serialize_to_bytes!, command_terminator, NO_TERMINATOR, Constants
+
+    # Three throwaway commands, one per terminator mode, used to exercise the write path of
+    # `send_command` in isolation. All are `NoResponse` so `send_command` only writes.
+
+    # Default terminator (newline). Serializes a single 'a'.
+    struct DefaultTerminatorCommand <: Command end
+    Base.@propagate_inbounds function serialize_to_bytes!(bytes, ::DefaultTerminatorCommand, startidx::Int)
+        bytes[startidx] = convert(UInt8, 'a')
+        return bytes, startidx + 1
+    end
+
+    # Binary terminator ('~'). Serializes a single 'L'.
+    struct TildeTerminatorCommand <: Command end
+    Base.@propagate_inbounds function serialize_to_bytes!(bytes, ::TildeTerminatorCommand, startidx::Int)
+        bytes[startidx] = convert(UInt8, 'L')
+        return bytes, startidx + 1
+    end
+    command_terminator(::Type{TildeTerminatorCommand}) = Constants.char.tilde
+
+    # No terminator. Serializes a single 'M'.
+    struct NoTerminatorCommand <: Command end
+    Base.@propagate_inbounds function serialize_to_bytes!(bytes, ::NoTerminatorCommand, startidx::Int)
+        bytes[startidx] = convert(UInt8, 'M')
+        return bytes, startidx + 1
+    end
+    command_terminator(::Type{NoTerminatorCommand}) = NO_TERMINATOR
+
+    # Serializes a payload that exactly fills a 4-byte buffer, leaving no room for the
+    # appended terminator. Used to test the buffer-bounds guard.
+    struct OverflowCommand <: Command end
+    Base.@propagate_inbounds function serialize_to_bytes!(bytes, ::OverflowCommand, startidx::Int)
+        nextind = startidx
+        for _ in 1:4
+            bytes[nextind] = convert(UInt8, 'x')
+            nextind += 1
+        end
+        return bytes, nextind
+    end
+end
+
+@testitem "send_command appends a newline terminator by default" setup = [FakeSerialPortUtils, TerminatorCommands] begin
+    import PetoiBittle: send_command
+
+    connection = fake_connection(UInt8[])
+    @test send_command(connection, DefaultTerminatorCommand()) === nothing
+    @test connection.sp.written == str_to_bytes("a\n")
+end
+
+@testitem "send_command appends a tilde terminator for binary commands" setup = [FakeSerialPortUtils, TerminatorCommands] begin
+    import PetoiBittle: send_command
+
+    connection = fake_connection(UInt8[])
+    @test send_command(connection, TildeTerminatorCommand()) === nothing
+    # Exactly the token and a '~', with no trailing newline.
+    @test connection.sp.written == str_to_bytes("L~")
+end
+
+@testitem "send_command appends nothing for no-terminator commands" setup = [FakeSerialPortUtils, TerminatorCommands] begin
+    import PetoiBittle: send_command
+
+    connection = fake_connection(UInt8[])
+    @test send_command(connection, NoTerminatorCommand()) === nothing
+    @test connection.sp.written == str_to_bytes("M")
+end
+
+@testitem "command_terminator defaults to newline" setup = [FakeSerialPortUtils, TerminatorCommands] begin
+    import PetoiBittle: command_terminator, Constants
+
+    @test command_terminator(DefaultTerminatorCommand) == Constants.char.newline
+    @test command_terminator(TildeTerminatorCommand) == Constants.char.tilde
+end
+
+@testitem "send_command errors cleanly when the command overflows the buffer" setup = [FakeSerialPortUtils, TerminatorCommands] begin
+    import PetoiBittle: send_command, Command, serialize_to_bytes!
+
+    # A command whose serialized payload alone fills the entire buffer, leaving no room for
+    # the terminator. `send_command` must error rather than write out of bounds.
+    connection = fake_connection(UInt8[]; buffer_capacity = 4)
+    @test_throws "buffer" send_command(connection, OverflowCommand())
+end
+
 @testitem "send_command returns the parsed response on the happy path" setup = [FakeSerialPortUtils] begin
     import PetoiBittle: send_command, GyroStats
 

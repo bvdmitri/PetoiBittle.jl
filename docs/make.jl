@@ -13,7 +13,19 @@ makedocs(;
         edit_link="main",
         assets=String[]
     ),
-    pages=["Home" => "index.md", "Commands" => "commands.md"]
+    pages=[
+        "Home" => "index.md",
+        "Commands" => [
+            "Overview" => "commands/overview.md",
+            "Gaits" => "commands/gaits.md",
+            "Postures" => "commands/postures.md",
+            "Behaviors" => "commands/behaviors.md",
+            "Joint control" => "commands/joints.md",
+            "Control & state" => "commands/control.md",
+            "Sound" => "commands/sound.md",
+            "Low-level & advanced" => "commands/lowlevel.md"
+        ]
+    ]
 )
 
 deploydocs(; repo="github.com/bvdmitri/PetoiBittle.jl", devbranch="main")

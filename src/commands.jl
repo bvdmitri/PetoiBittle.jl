@@ -21,6 +21,31 @@ A simple command response, indicating that the command has no response.
 struct NoResponse end
 
 """
+A sentinel value returned by [`PetoiBittle.command_terminator`](@ref) to indicate that a
+command should be sent without any trailing terminator byte. `0xff` is never a valid
+terminator in the Petoi serial protocol, so it is safe as a sentinel.
+"""
+const NO_TERMINATOR = 0xff
+
+"""
+    command_terminator(::Type{<:Command})
+
+Returns the single byte appended after the serialized command bytes when writing to the
+robot. The Petoi firmware expects one of three terminators depending on the command:
+
+- [`Constants.char.newline`](@ref PetoiBittle.Constants) (`'\\n'`, the default) for ASCII
+  text commands such as skills and `MoveJoints`.
+- [`Constants.char.tilde`](@ref PetoiBittle.Constants) (`'~'`) for raw-binary commands that
+  carry packed byte arguments (for example a transform-to-frame / set-all-joints command).
+- [`PetoiBittle.NO_TERMINATOR`](@ref) for the few commands that take no terminator at all.
+
+Note that this concerns only the *outgoing* command. Responses coming back from the robot
+are always newline-terminated regardless of the command terminator, so the response reader
+in [`PetoiBittle.send_command`](@ref) always keys on a newline.
+"""
+command_terminator(::Type{T}) where {T <: Command} = Constants.char.newline
+
+"""
     command_return_type(::Type{<:Command})
 
 Different commands may have different response (return) types while some commands 
@@ -117,13 +142,23 @@ function send_command(connection::Connection, command::Command)
     _transport_drain!(connection.sp)
     _transport_flush!(connection.sp)
     buffer::Vector{UInt8} = connection.buffer
-    nextind::Int = 1
-    buffer, nextind = serialize_to_bytes!(buffer, command, nextind)
-    buffer[nextind] = Constants.char.newline
-    @debug "Sending command to Petoi Bittle" command = BufferedString(buffer, 1, nextind)
+    # `payload_end` is one-past the last serialized command byte.
+    buffer, payload_end = serialize_to_bytes!(buffer, command, 1)
+    # Append the per-command terminator (newline / '~' / none). `command_terminator` is pure
+    # type-dispatch returning a `UInt8` constant, so this stays type-stable and allocation-free.
+    terminator::UInt8 = command_terminator(typeof(command))
+    write_len::Int = payload_end - 1 # number of bytes to transmit (payload, terminator added below)
+    if terminator !== NO_TERMINATOR
+        if payload_end > length(buffer)
+            error(lazy"The serialized command does not fit into the $(length(buffer))-byte connection buffer")
+        end
+        @inbounds buffer[payload_end] = terminator
+        write_len = payload_end
+    end
+    @debug "Sending command to Petoi Bittle" command = BufferedString(buffer, 1, write_len)
     before_command(connection, command)
-    ntransmitted = _transport_write!(connection.sp, buffer, nextind)
-    @assert ntransmitted == nextind "The amount of transmitted bytes is not equal to the buffer size"
+    ntransmitted = _transport_write!(connection.sp, buffer, write_len)
+    @assert ntransmitted == write_len "The amount of transmitted bytes is not equal to the buffer size"
     _transport_drain!(connection.sp)
     after_command(connection, command)
 
