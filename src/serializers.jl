@@ -76,6 +76,48 @@ function Base.iterate(::DigitsIterator, state::Tuple{Int, Int})
 end
 
 """
+    _serialize_token!(bytes, token::String, startidx)
+
+Write the ASCII `token` byte for byte to `bytes` starting at `startidx`, without allocating.
+Used by fixed-token commands (skills, postures, gaits, ...). Returns the modified `bytes`
+and the next to last modified index.
+
+```jldoctest
+julia> PetoiBittle._serialize_token!(zeros(UInt8, 5), "ksit", 1)
+(UInt8[0x6b, 0x73, 0x69, 0x74, 0x00], 5)
+```
+"""
+Base.@propagate_inbounds function _serialize_token!(bytes, token::String, startidx::Int)
+    nextind = startidx
+    for byte in codeunits(token)
+        bytes[nextind] = byte
+        nextind = nextind + 1
+    end
+    return bytes, nextind
+end
+
+"""
+    _serialize_raw_i8!(bytes, value::Int, startidx)
+
+Write `value` as a single raw signed-byte (two's complement) to `bytes` at `startidx`.
+Used by binary commands whose arguments are packed as raw bytes (for example joint angles
+in a transform-to-frame command). Errors if `value` is outside the signed 8-bit range
+`-128:127`. Returns the modified `bytes` and the next to last modified index.
+
+```jldoctest
+julia> PetoiBittle._serialize_raw_i8!(zeros(UInt8, 2), -1, 1)
+(UInt8[0xff, 0x00], 2)
+```
+"""
+Base.@propagate_inbounds function _serialize_raw_i8!(bytes, value::Int, startidx::Int)
+    if value < -128 || value > 127
+        error(lazy"Cannot serialize `$(value)` as a raw signed byte: out of the -128:127 range")
+    end
+    bytes[startidx] = reinterpret(UInt8, convert(Int8, value))
+    return bytes, startidx + 1
+end
+
+"""
     serialize_to_bytes!(bytes, number::Int, startidx)
 
 Write the `number` digit by digit to `bytes` starting at `startidx`.
