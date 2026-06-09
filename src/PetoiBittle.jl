@@ -13,6 +13,8 @@ include("commands/rest.jl")
 include("commands/skills.jl")
 include("commands/control.jl")
 include("commands/joints_sequence.jl")
+include("commands/joints_binary.jl")
+include("commands/sound.jl")
 
 # Built-in named skills (gaits, postures, behaviors): a data table plus a generator that
 # turns each row into a singleton command, a convenience verb, and their docstrings.
@@ -30,5 +32,6 @@ using Compat
 @compat public Connection, Command, NoResponse, NO_TERMINATOR
 @compat public MoveJoints, MoveJointSpec, MoveJointSequence, GyroStats, GyroStatsOutput, GyroCalibrate, Rest, Skill
 @compat public Pause, SwitchGyro, Calibrate, Recover
+@compat public SetAllJoints, PlayMelody, PlayMusic, Tone
 @compat public BUFFER_CAPACITY, BAUD_RATE, MAX_RETRIES, DEFAULT_TIMEOUT
 end
