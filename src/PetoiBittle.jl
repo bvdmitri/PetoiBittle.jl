@@ -19,8 +19,8 @@ include("commands/skills.jl")
 # Julia 1.10 (the bare `public` keyword is only available on 1.11+).
 using Compat
 @compat public connect, disconnect, find_bittle_port, is_bittle_port
-@compat public send_command, before_command, after_command
-@compat public Connection, Command
+@compat public send_command, before_command, after_command, command_terminator
+@compat public Connection, Command, NoResponse, NO_TERMINATOR
 @compat public MoveJoints, GyroStats, GyroStatsOutput, GyroCalibrate, Rest, Skill
 @compat public BUFFER_CAPACITY, BAUD_RATE, MAX_RETRIES, DEFAULT_TIMEOUT
 end
