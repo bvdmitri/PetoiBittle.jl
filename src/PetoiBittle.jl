@@ -11,6 +11,8 @@ include("commands/gyro_stats.jl")
 include("commands/gyro_calibration.jl")
 include("commands/rest.jl")
 include("commands/skills.jl")
+include("commands/control.jl")
+include("commands/joints_sequence.jl")
 
 # Built-in named skills (gaits, postures, behaviors): a data table plus a generator that
 # turns each row into a singleton command, a convenience verb, and their docstrings.
@@ -26,6 +28,7 @@ using Compat
 @compat public connect, disconnect, find_bittle_port, is_bittle_port
 @compat public send_command, before_command, after_command, command_terminator
 @compat public Connection, Command, NoResponse, NO_TERMINATOR
-@compat public MoveJoints, GyroStats, GyroStatsOutput, GyroCalibrate, Rest, Skill
+@compat public MoveJoints, MoveJointSpec, MoveJointSequence, GyroStats, GyroStatsOutput, GyroCalibrate, Rest, Skill
+@compat public Pause, SwitchGyro, Calibrate, Recover
 @compat public BUFFER_CAPACITY, BAUD_RATE, MAX_RETRIES, DEFAULT_TIMEOUT
 end
