@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="docs/src/assets/logo.svg" alt="PetoiBittle.jl logo" width="200">
+</div>
+
 # PetoiBittle
 
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://bvdmitri.github.io/PetoiBittle.jl/stable/)
