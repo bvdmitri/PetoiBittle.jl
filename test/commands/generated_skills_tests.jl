@@ -71,11 +71,16 @@ end
 end
 
 @testitem "a representative generated command is type stable and allocation free" setup = [FakeSerialPortUtils] begin
+    import PetoiBittle
     import PetoiBittle: WalkForward, walk_forward, serialize_to_bytes!, send_command
     import JET
 
+    # Scope JET to our own module: the intent is to verify that *our* command code is type
+    # stable. `send_command` calls `@debug`, whose Base.CoreLogging frontend has an inference
+    # imprecision on Julia 1.10 (a runtime dispatch deep inside `typejoin`); that is Base's,
+    # not ours, so we filter it out the same way `test_package` does in runtests.jl.
     buffer = zeros(UInt8, 32)
-    JET.@test_opt serialize_to_bytes!(buffer, WalkForward(), 1)
+    JET.@test_opt target_modules = (PetoiBittle,) serialize_to_bytes!(buffer, WalkForward(), 1)
 
     # Measure allocations behind a function barrier; at test-module top level the untyped
     # globals would otherwise box the arguments and report spurious allocations.
@@ -84,5 +89,5 @@ end
     @test probe(buffer) == 0
 
     connection = fake_connection(UInt8[])
-    JET.@test_opt send_command(connection, WalkForward())
+    JET.@test_opt target_modules = (PetoiBittle,) send_command(connection, WalkForward())
 end
