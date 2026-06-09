@@ -76,18 +76,20 @@ function Base.iterate(::DigitsIterator, state::Tuple{Int, Int})
 end
 
 """
-    _serialize_token!(bytes, token::String, startidx)
+    _serialize_token!(bytes, token::AbstractString, startidx)
 
 Write the ASCII `token` byte for byte to `bytes` starting at `startidx`, without allocating.
-Used by fixed-token commands (skills, postures, gaits, ...). Returns the modified `bytes`
-and the next to last modified index.
+Used by fixed-token commands (skills, postures, gaits, ...). Accepts any `AbstractString`
+(`String`, `SubString`, ...); it specializes per concrete type at the call site, so it
+stays type-stable and allocation-free. Returns the modified `bytes` and the next to last
+modified index.
 
 ```jldoctest
 julia> PetoiBittle._serialize_token!(zeros(UInt8, 5), "ksit", 1)
 (UInt8[0x6b, 0x73, 0x69, 0x74, 0x00], 5)
 ```
 """
-Base.@propagate_inbounds function _serialize_token!(bytes, token::String, startidx::Int)
+Base.@propagate_inbounds function _serialize_token!(bytes, token::AbstractString, startidx::Int)
     nextind = startidx
     for byte in codeunits(token)
         bytes[nextind] = byte

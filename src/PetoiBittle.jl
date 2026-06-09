@@ -12,6 +12,11 @@ include("commands/gyro_calibration.jl")
 include("commands/rest.jl")
 include("commands/skills.jl")
 
+# Built-in named skills (gaits, postures, behaviors): a data table plus a generator that
+# turns each row into a singleton command, a convenience verb, and their docstrings.
+include("commands/generated/skills_table.jl")
+include("commands/generated/skills_generator.jl")
+
 # Mark the public API. Nothing is `export`ed on purpose: names like `connect` would clash
 # when `using` PetoiBittle alongside other packages, so the API is meant to be accessed as
 # `PetoiBittle.connect` etc. The `public` keyword records these as public API without

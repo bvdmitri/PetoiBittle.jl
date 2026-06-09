@@ -75,6 +75,13 @@ end
     fill!(bytes, 0)
     @test _serialize_token!(bytes, "d", 1) == (bytes, 2)
     @test bytes[1] == convert(UInt8, 'd')
+
+    # Any `AbstractString` works, not just `String` (e.g. a `SubString`).
+    fill!(bytes, 0)
+    sub = SubString("xkwkFx", 2, 5)
+    @test sub isa SubString
+    @test _serialize_token!(bytes, sub, 1) == (bytes, 5)
+    @test bytes[1:4] == [0x6b, 0x77, 0x6b, 0x46]
 end
 
 @testitem "_serialize_token! does not allocate" begin
@@ -83,7 +90,11 @@ end
 
     bytes = zeros(UInt8, 8)
     JET.@test_opt _serialize_token!(bytes, "ksit", 1)
-    @test @allocated(_serialize_token!(bytes, "ksit", 1)) === 0
+
+    # Measure behind a function barrier so untyped test-module globals do not box.
+    probe(buf) = @allocated _serialize_token!(buf, "ksit", 1)
+    probe(bytes) # warm up / compile
+    @test probe(bytes) == 0
 end
 
 @testitem "_serialize_raw_i8! writes one signed byte" begin
