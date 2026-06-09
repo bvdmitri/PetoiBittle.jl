@@ -1,0 +1,104 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+
+  <!-- Tail -->
+  <path
+    d="M96 232 L56 202"
+    stroke="#111111"
+    stroke-width="12"
+    stroke-linecap="round"
+    fill="none"/>
+
+  <!-- Body (shorter than before, less cow-like) -->
+  <rect
+    x="96"
+    y="200"
+    width="280"
+    height="110"
+    rx="30"
+    fill="#FFFFFF"
+    stroke="#111111"
+    stroke-width="12"/>
+
+  <!-- Ears: small triangles (behind the head) -->
+  <path d="M364 200 L376 166 L388 200 Z"
+    fill="#FFFFFF" stroke="#111111" stroke-width="10" stroke-linejoin="round"/>
+  <path d="M408 200 L420 166 L432 200 Z"
+    fill="#FFFFFF" stroke="#111111" stroke-width="10" stroke-linejoin="round"/>
+
+  <!-- Head (facing the viewer) -->
+  <rect
+    x="346"
+    y="198"
+    width="104"
+    height="86"
+    rx="26"
+    fill="#FFFFFF"
+    stroke="#111111"
+    stroke-width="12"/>
+
+  <!-- Eyes: simple dots -->
+  <circle cx="376" cy="240" r="9" fill="#111111"/>
+  <circle cx="420" cy="240" r="9" fill="#111111"/>
+
+  <!-- PETOI -->
+  <text
+    x="236"
+    y="272"
+    text-anchor="middle"
+    font-family="Inter, Helvetica, Arial, sans-serif"
+    font-size="52"
+    font-weight="700"
+    fill="#111111"
+    letter-spacing="3">
+    PETOI
+  </text>
+
+  <!-- Servo joints / legs -->
+  <circle cx="130" cy="350" r="24" fill="#CB3C33"/>
+  <circle cx="205" cy="350" r="24" fill="#9558B2"/>
+  <circle cx="280" cy="350" r="24" fill="#389826"/>
+  <circle cx="355" cy="350" r="24" fill="#CB3C33"/>
+
+  <!-- Abstract single-board computer (Raspberry-Pi-like) mounted on top -->
+  <g>
+    <!-- PCB -->
+    <rect
+      x="148"
+      y="120"
+      width="176"
+      height="84"
+      rx="14"
+      fill="#389826"
+      stroke="#111111"
+      stroke-width="10"/>
+
+    <!-- GPIO header: two rows of gold pins -->
+    <g fill="#FFCB05">
+      <circle cx="170" cy="140" r="4.5"/>
+      <circle cx="190" cy="140" r="4.5"/>
+      <circle cx="210" cy="140" r="4.5"/>
+      <circle cx="230" cy="140" r="4.5"/>
+      <circle cx="250" cy="140" r="4.5"/>
+      <circle cx="270" cy="140" r="4.5"/>
+      <circle cx="290" cy="140" r="4.5"/>
+      <circle cx="310" cy="140" r="4.5"/>
+      <circle cx="170" cy="154" r="4.5"/>
+      <circle cx="190" cy="154" r="4.5"/>
+      <circle cx="210" cy="154" r="4.5"/>
+      <circle cx="230" cy="154" r="4.5"/>
+      <circle cx="250" cy="154" r="4.5"/>
+      <circle cx="270" cy="154" r="4.5"/>
+      <circle cx="290" cy="154" r="4.5"/>
+      <circle cx="310" cy="154" r="4.5"/>
+    </g>
+
+    <!-- Side ports, echoing the servo colours -->
+    <rect x="152" y="164" width="13" height="24" rx="2" fill="#CB3C33"/>
+    <rect x="307" y="164" width="13" height="24" rx="2" fill="#9558B2"/>
+
+    <!-- SoC chip -->
+    <rect x="206" y="168" width="60" height="28" rx="4" fill="#111111"/>
+    <circle cx="214" cy="176" r="3" fill="#FFFFFF"/>
+  </g>
+
+</svg>

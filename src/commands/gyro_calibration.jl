@@ -10,10 +10,14 @@ resting state might be calibration posture or rest posture.
 Either use the [`PetoiBittle.Skill`](@ref) command or [`PetoiBittle.Rest`](@ref) 
 before calibrating the gyro.
 
-It is advised to wait a little bit before starting the calibration process (especially 
-after executing a [`PetoiBittle.Skill`](@ref)). By default waits for 2 seconds. 
+It is advised to wait a little bit before starting the calibration process (especially
+after executing a [`PetoiBittle.Skill`](@ref)). By default waits for 2 seconds.
 The entire process also takes some time, but it is possible to configure it.
 By default calibrates for 15 seconds. Uses `sleep` under the hood.
+
+**Note**: After the calibration finishes, this command automatically persists the new
+calibration values to the robot by sending a follow-up save command, so the calibration
+survives a power cycle. This happens inside the [`after_command`](@ref) callback.
 """
 Base.@kwdef struct GyroCalibrate <: Command
     wait_before::Float64 = 2.0
@@ -39,8 +43,9 @@ function after_command(connection::Connection, command::GyroCalibrate)
         @info lazy"Calibrating gyro for $(command.wait_after) seconds"
     end
     sleep(command.wait_after)
+    # Persist the freshly computed calibration to the robot so it survives a power cycle.
     send_command(connection, GyroCalibrateSave())
-    if command.verbose 
+    if command.verbose
         @info "Gyro has been calibrated"
     end
 end

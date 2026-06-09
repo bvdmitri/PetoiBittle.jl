@@ -10,7 +10,7 @@ using TestItemRunner
     end
 
     @testset "Code linting (JET.jl)" begin
-        JET.test_package(PetoiBittle; target_defined_modules = true)
+        JET.test_package(PetoiBittle; target_modules = (PetoiBittle,))
     end
 
     TestItemRunner.@run_package_tests()
