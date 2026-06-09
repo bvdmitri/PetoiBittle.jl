@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-06-09
+
 ### Added
 
 - High-level convenience verbs for every built-in skill, for example `walk_forward(connection)`,
@@ -51,4 +53,5 @@ Initial release.
 - Public API marked with the `public` keyword (via Compat.jl for Julia 1.10 support).
 - Documentation, doctests, and a test suite checked with Aqua.jl and JET.jl.
 
+[1.1.0]: https://github.com/bvdmitri/PetoiBittle.jl/releases/tag/v1.1.0
 [1.0.0]: https://github.com/bvdmitri/PetoiBittle.jl/releases/tag/v1.0.0
