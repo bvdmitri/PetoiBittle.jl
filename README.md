@@ -111,6 +111,10 @@ Runnable examples live in the `examples/` folder:
   online with variational iterations. Configurable via command-line flags (see
   `--help`), including a `--simulate` mode that runs without the robot.
 
+
+
+https://github.com/user-attachments/assets/ee7d9c88-a666-4eba-9610-6b1fa79bedf5
+
 Run any of them by name, for example:
 
 ```bash
