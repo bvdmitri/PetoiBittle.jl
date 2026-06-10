@@ -52,9 +52,9 @@ argsettings = ArgParseSettings(
     arg_type = Int
     default = 20
     "--history"
-    help = "seconds of time-series history shown"
+    help = "show only the last N seconds in the time-series charts"
     arg_type = Float64
-    default = 30.0
+    default = 10.0
     "--calib-seconds"
     help = "duration of the stationary calibration phase in seconds"
     arg_type = Float64
@@ -384,18 +384,30 @@ series_axes = (yaw = make_series_axis(1, :yaw), pitch = make_series_axis(2, :pit
 
 # --- numeric readout column ---
 
+# A monospace font keeps the decimal dots vertically aligned in the readout column.
+# `findfont` fuzzy-matches, so verify the resolved family before trusting it and fall
+# back to the default font when no common monospace candidate is installed.
+monospace_font = let candidates = ("Menlo", "Consolas", "Courier New", "DejaVu Sans Mono")
+    idx = findfirst(candidates) do name
+        font = Makie.FreeTypeAbstraction.findfont(name)
+        font !== nothing && startswith(lowercase(font.family_name), lowercase(first(split(name))))
+    end
+    idx === nothing ? :regular : candidates[idx]
+end
+
 value_text = map(_ -> Observable("waiting for data..."), NamedTuple{AXES}(AXES))
 
 for (row, axis) in enumerate(AXES)
+    # The monospace formatting keeps every line the same width, so the column can size
+    # itself from the labels (tellwidth = true) without the layout jittering.
     Label(
         fig[row, 3], value_text[axis];
-        halign = :left, justification = :left, tellheight = false, tellwidth = false,
-        fontsize = 16,
+        halign = :left, justification = :left, tellheight = false, tellwidth = true,
+        fontsize = 15, font = monospace_font,
     )
 end
 
 colsize!(fig.layout, 1, Relative(0.4))
-colsize!(fig.layout, 3, Fixed(280))
 
 axislegend(series_axes.yaw; position = :lt, framevisible = true)
 
@@ -444,18 +456,20 @@ function update_estimates!(b::AxisBuffers, t::Float64, cal, uncal)
 end
 
 # Multi-line numeric readout shown next to the chart, e.g.
-#   Yaw (calibrated)      0.00 ± 1.00
-#   Yaw (uncalibrated)    0.00 ± 0.20
-#   Yaw (raw)             0.31241
-# The ± value is 3 standard deviations, matching the shaded band.
+#   Yaw (calibrated)       0.00 ±  1.00
+#   Yaw (uncalibrated)     0.00 ±  0.20
+#   Yaw (raw)              0.31241
+# The ± value is 3 standard deviations, matching the shaded band. The field widths are
+# chosen so that with the monospace font every decimal dot lands in the same column:
+# %9.2f and %12.5f both place the dot at the 7th character of the field.
 function format_values(axis::Symbol, b::AxisBuffers)
     name = titlecase(String(axis))
     readout = String[]
     if !isempty(b.cal_m)
-        push!(readout, @sprintf("%s (calibrated)   %8.2f ± %.2f", name, last(b.cal_m), 3 * last(b.cal_s)))
+        push!(readout, @sprintf("%s (calibrated)   %9.2f ± %5.2f", name, last(b.cal_m), 3 * last(b.cal_s)))
     end
     if args["show-uncalibrated"] && !isempty(b.uncal_m)
-        push!(readout, @sprintf("%s (uncalibrated) %8.2f ± %.2f", name, last(b.uncal_m), 3 * last(b.uncal_s)))
+        push!(readout, @sprintf("%s (uncalibrated) %9.2f ± %5.2f", name, last(b.uncal_m), 3 * last(b.uncal_s)))
     end
     if args["show-raw"] && !isempty(b.raw_v)
         push!(readout, @sprintf("%s (raw)          %12.5f", name, last(b.raw_v)))
