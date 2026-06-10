@@ -1,10 +1,12 @@
 # Live IMU dashboard: real-time Bayesian filtering of Petoi Bittle gyro data with RxInfer + GLMakie.
 #
-# The demo runs two inference pipelines over the same raw IMU stream:
-#   - "calibrated": uses per-axis sensor bias and observation noise precision learned
-#     with RxInfer during an initial stationary calibration phase;
-#   - "uncalibrated": same sliding-window model, but assumes zero bias and a naive
-#     overconfident noise precision, so it stays offset and jittery.
+# The demo runs two inference pipelines over the same raw IMU stream. Both learn the
+# observation noise precision online (Gamma prior, structured mean-field constraints,
+# variational iterations), but they start from different information:
+#   - "calibrated": subtracts the per-axis sensor bias and uses the noise posterior
+#     learned with RxInfer during an initial stationary calibration phase as its prior;
+#   - "uncalibrated": same sliding-window model, but assumes zero bias and starts from
+#     a confidently wrong noise prior, so it stays offset and jittery.
 # The dashboard shows a 3D view of the robot orientation (solid box = calibrated,
 # translucent ghost = uncalibrated) and three time-series panels (yaw, pitch, roll)
 # overlaying calibrated, uncalibrated, and raw measurements.
@@ -67,6 +69,10 @@ argsettings = ArgParseSettings(
     help = "random-walk std (degrees per step) of the latent state"
     arg_type = Float64
     default = 1.0
+    "--iterations"
+    help = "number of variational iterations per window inference"
+    arg_type = Int
+    default = 5
     "--show-uncalibrated"
     help = "overlay the uncalibrated estimate (true/false)"
     arg_type = Bool
@@ -84,11 +90,14 @@ const WINDOW_SIZE = args["window-size"]
 const HISTORY_SECONDS = args["history"]
 const INFER_STRIDE = args["infer-stride"]
 const PROCESS_VARIANCE = abs2(args["process-std"])
+const ITERATIONS = args["iterations"]
 
-# The uncalibrated pipeline assumes the sensor is nearly perfect (std of 0.1 degrees,
-# far below the real noise level). This overconfidence makes its estimate chase every
-# raw fluctuation, which is exactly how a model with unestimated parameters misbehaves.
-const UNCALIBRATED_W = 100.0
+# The uncalibrated pipeline starts from a confidently wrong prior over the observation
+# noise precision: mean 100 (an assumed std of 0.1 degrees, far below the real noise
+# level) with a relative std of 1%, so the handful of samples in a window barely moves
+# it. Its estimate keeps chasing every raw fluctuation, which is exactly how a model
+# with badly initialized parameters misbehaves.
+const UNCALIBRATED_W_PRIOR = GammaShapeRate(1.0e4, 1.0e2)
 
 # ------------------------------------------------------------------
 # Helpers: rotations and yaw unwrapping
@@ -202,14 +211,22 @@ function calibrate(samples::Vector{Float64})
         iterations = 20,
         free_energy = false,
     )
-    return (bias = mean(last(result.posteriors[:bias])), w = mean(last(result.posteriors[:w])))
+    # The full Gamma posterior over the noise precision is kept: it becomes the prior
+    # for the online noise learning in the sliding-window smoother.
+    return (
+        bias = mean(last(result.posteriors[:bias])),
+        w = mean(last(result.posteriors[:w])),
+        w_posterior = last(result.posteriors[:w]),
+    )
 end
 
-# Sliding-window smoother: a 1D Gaussian random walk observed with known noise precision.
-# Fully conjugate, so inference is a single exact belief propagation pass. The sensor bias
-# is pre-subtracted from the data (mathematically identical to modeling it as an additive
-# term), which lets the calibrated and uncalibrated pipelines share this model.
-@model function sliding_window_smoother(y, w, q_var, x0_mean, x0_var)
+# Sliding-window smoother: a 1D Gaussian random walk observed with unknown noise
+# precision, which is learned online from each window under a Gamma prior. The sensor
+# bias is pre-subtracted from the data (mathematically identical to modeling it as an
+# additive term), which lets the calibrated and uncalibrated pipelines share this model;
+# they differ only in the bias and in the Gamma prior over the noise precision.
+@model function sliding_window_smoother(y, w_shape, w_rate, q_var, x0_mean, x0_var)
+    w ~ Gamma(shape = w_shape, rate = w_rate)
     x_prev ~ NormalMeanVariance(x0_mean, x0_var)
     for i in eachindex(y)
         x[i] ~ NormalMeanVariance(x_prev, q_var)
@@ -218,15 +235,34 @@ end
     end
 end
 
-function run_window(y::Vector{Float64}, bias::Float64, w::Float64)
+# Structured mean-field: the state chain stays jointly Gaussian, only the noise precision
+# is factorized out (joint Normal-Gamma inference on the chain is intractable under plain
+# belief propagation), at the cost of running several variational iterations.
+smoother_constraints = @constraints begin
+    q(x_prev, x, w) = q(x_prev, x)q(w)
+end
+
+smoother_init = @initialization begin
+    q(w) = GammaShapeRate(1.0, 1.0)
+end
+
+function run_window(y::Vector{Float64}, bias::Float64, w_prior)
     yc = y .- bias
     result = infer(
-        model = sliding_window_smoother(w = w, q_var = PROCESS_VARIANCE, x0_mean = yc[1], x0_var = 25.0),
+        model = sliding_window_smoother(
+            w_shape = shape(w_prior), w_rate = rate(w_prior),
+            q_var = PROCESS_VARIANCE, x0_mean = yc[1], x0_var = 25.0,
+        ),
         data = (y = yc,),
+        constraints = smoother_constraints,
+        initialization = smoother_init,
+        iterations = ITERATIONS,
         free_energy = false,
     )
-    last_state = last(result.posteriors[:x])
-    return (mean(last_state), std(last_state))
+    # With `iterations` the posteriors are per-iteration vectors; take the final iteration.
+    last_state = last(last(result.posteriors[:x]))
+    w_posterior = last(result.posteriors[:w])
+    return (mean(last_state), std(last_state), 1 / sqrt(mean(w_posterior)))
 end
 
 # ------------------------------------------------------------------
@@ -292,15 +328,15 @@ calibration = (
 yaw_reference = calibration.yaw.bias
 
 calibrated_params = (
-    yaw = (bias = 0.0, w = calibration.yaw.w),
-    pitch = (bias = calibration.pitch.bias, w = calibration.pitch.w),
-    roll = (bias = calibration.roll.bias, w = calibration.roll.w),
+    yaw = (bias = 0.0, w_prior = calibration.yaw.w_posterior),
+    pitch = (bias = calibration.pitch.bias, w_prior = calibration.pitch.w_posterior),
+    roll = (bias = calibration.roll.bias, w_prior = calibration.roll.w_posterior),
 )
 
 uncalibrated_params = (
-    yaw = (bias = 0.0, w = UNCALIBRATED_W),
-    pitch = (bias = 0.0, w = UNCALIBRATED_W),
-    roll = (bias = 0.0, w = UNCALIBRATED_W),
+    yaw = (bias = 0.0, w_prior = UNCALIBRATED_W_PRIOR),
+    pitch = (bias = 0.0, w_prior = UNCALIBRATED_W_PRIOR),
+    roll = (bias = 0.0, w_prior = UNCALIBRATED_W_PRIOR),
 )
 
 @info "Calibration finished" calibration.yaw calibration.pitch calibration.roll
@@ -312,7 +348,7 @@ if args["simulate"]
 end
 
 @info "Warming up the sliding-window inference (first call compiles the model)"
-run_window(randn(WINDOW_SIZE), 0.0, 1.0)
+run_window(randn(WINDOW_SIZE), 0.0, GammaShapeRate(1.0, 1.0))
 
 # ------------------------------------------------------------------
 # Dashboard construction
@@ -425,9 +461,10 @@ mutable struct AxisBuffers
     uncal_t::Vector{Float64}             # uncalibrated estimate history (t, mean, std)
     uncal_m::Vector{Float64}
     uncal_s::Vector{Float64}
+    cal_noise_std::Float64               # latest learned observation noise std (calibrated)
 end
 
-AxisBuffers() = AxisBuffers((Float64[] for _ in 1:9)...)
+AxisBuffers() = AxisBuffers((Float64[] for _ in 1:9)..., NaN)
 
 buffers = NamedTuple{AXES}((AxisBuffers(), AxisBuffers(), AxisBuffers()))
 
@@ -447,8 +484,9 @@ function push_sample!(b::AxisBuffers, t::Float64, value::Float64)
 end
 
 function update_estimates!(b::AxisBuffers, t::Float64, cal, uncal)
-    cal_mean, cal_std = run_window(b.window, cal.bias, cal.w)
-    uncal_mean, uncal_std = run_window(b.window, uncal.bias, uncal.w)
+    cal_mean, cal_std, cal_noise_std = run_window(b.window, cal.bias, cal.w_prior)
+    uncal_mean, uncal_std, _ = run_window(b.window, uncal.bias, uncal.w_prior)
+    b.cal_noise_std = cal_noise_std
     push!(b.cal_t, t); push!(b.cal_m, cal_mean); push!(b.cal_s, cal_std)
     push!(b.uncal_t, t); push!(b.uncal_m, uncal_mean); push!(b.uncal_s, uncal_std)
     trim_history!(b.cal_t, b.cal_m, b.cal_s; tnow = t)
@@ -473,6 +511,9 @@ function format_values(axis::Symbol, b::AxisBuffers)
     end
     if args["show-raw"] && !isempty(b.raw_v)
         push!(readout, @sprintf("%s (raw)          %12.5f", name, last(b.raw_v)))
+    end
+    if !isnan(b.cal_noise_std)
+        push!(readout, @sprintf("%s (noise std)    %9.2f", name, b.cal_noise_std))
     end
     return isempty(readout) ? "waiting for data..." : join(readout, "\n")
 end
