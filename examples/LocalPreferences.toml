@@ -1,0 +1,5 @@
+# GLMakie's precompile workload opens real OpenGL windows, which segfaults in
+# headless sessions (no WindowServer access). Disabling it only makes the first
+# `using GLMakie` a bit slower; the dashboard itself is unaffected.
+[GLMakie]
+precompile_workload = false
