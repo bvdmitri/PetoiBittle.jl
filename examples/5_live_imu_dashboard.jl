@@ -445,7 +445,11 @@ end
 
 colsize!(fig.layout, 1, Relative(0.4))
 
-axislegend(series_axes.yaw; position = :lt, framevisible = true)
+# A horizontal legend above the charts keeps the plot area itself free.
+Legend(
+    fig[0, 2], series_axes.yaw;
+    orientation = :horizontal, framevisible = false, tellheight = true, tellwidth = false,
+)
 
 # ------------------------------------------------------------------
 # Data buffers
