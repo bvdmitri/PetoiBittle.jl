@@ -19,6 +19,7 @@ using Logging
 using ArgParse
 using GLMakie
 using RxInfer
+using Printf
 
 Logging.global_logger(ConsoleLogger(Logging.Info))
 
@@ -49,7 +50,7 @@ argsettings = ArgParseSettings(
     "--window-size"
     help = "number of samples in the sliding inference window"
     arg_type = Int
-    default = 50
+    default = 20
     "--history"
     help = "seconds of time-series history shown"
     arg_type = Float64
@@ -381,7 +382,20 @@ end
 
 series_axes = (yaw = make_series_axis(1, :yaw), pitch = make_series_axis(2, :pitch), roll = make_series_axis(3, :roll))
 
-colsize!(fig.layout, 1, Relative(0.45))
+# --- numeric readout column ---
+
+value_text = map(_ -> Observable("waiting for data..."), NamedTuple{AXES}(AXES))
+
+for (row, axis) in enumerate(AXES)
+    Label(
+        fig[row, 3], value_text[axis];
+        halign = :left, justification = :left, tellheight = false, tellwidth = false,
+        fontsize = 16,
+    )
+end
+
+colsize!(fig.layout, 1, Relative(0.4))
+colsize!(fig.layout, 3, Fixed(280))
 
 axislegend(series_axes.yaw; position = :lt, framevisible = true)
 
@@ -396,11 +410,12 @@ mutable struct AxisBuffers
     cal_t::Vector{Float64}               # calibrated estimate history (t, mean, std)
     cal_m::Vector{Float64}
     cal_s::Vector{Float64}
-    uncal_t::Vector{Float64}             # uncalibrated estimate history (t, mean)
+    uncal_t::Vector{Float64}             # uncalibrated estimate history (t, mean, std)
     uncal_m::Vector{Float64}
+    uncal_s::Vector{Float64}
 end
 
-AxisBuffers() = AxisBuffers(Float64[], Float64[], Float64[], Float64[], Float64[], Float64[], Float64[], Float64[])
+AxisBuffers() = AxisBuffers((Float64[] for _ in 1:9)...)
 
 buffers = NamedTuple{AXES}((AxisBuffers(), AxisBuffers(), AxisBuffers()))
 
@@ -421,14 +436,35 @@ end
 
 function update_estimates!(b::AxisBuffers, t::Float64, cal, uncal)
     cal_mean, cal_std = run_window(b.window, cal.bias, cal.w)
-    uncal_mean, _ = run_window(b.window, uncal.bias, uncal.w)
+    uncal_mean, uncal_std = run_window(b.window, uncal.bias, uncal.w)
     push!(b.cal_t, t); push!(b.cal_m, cal_mean); push!(b.cal_s, cal_std)
-    push!(b.uncal_t, t); push!(b.uncal_m, uncal_mean)
+    push!(b.uncal_t, t); push!(b.uncal_m, uncal_mean); push!(b.uncal_s, uncal_std)
     trim_history!(b.cal_t, b.cal_m, b.cal_s; tnow = t)
-    trim_history!(b.uncal_t, b.uncal_m; tnow = t)
+    trim_history!(b.uncal_t, b.uncal_m, b.uncal_s; tnow = t)
+end
+
+# Multi-line numeric readout shown next to the chart, e.g.
+#   Yaw (calibrated)      0.00 ± 1.00
+#   Yaw (uncalibrated)    0.00 ± 0.20
+#   Yaw (raw)             0.31241
+# The ± value is 3 standard deviations, matching the shaded band.
+function format_values(axis::Symbol, b::AxisBuffers)
+    name = titlecase(String(axis))
+    readout = String[]
+    if !isempty(b.cal_m)
+        push!(readout, @sprintf("%s (calibrated)   %8.2f ± %.2f", name, last(b.cal_m), 3 * last(b.cal_s)))
+    end
+    if args["show-uncalibrated"] && !isempty(b.uncal_m)
+        push!(readout, @sprintf("%s (uncalibrated) %8.2f ± %.2f", name, last(b.uncal_m), 3 * last(b.uncal_s)))
+    end
+    if args["show-raw"] && !isempty(b.raw_v)
+        push!(readout, @sprintf("%s (raw)          %12.5f", name, last(b.raw_v)))
+    end
+    return isempty(readout) ? "waiting for data..." : join(readout, "\n")
 end
 
 function update_axis_observables!(axis::Symbol, b::AxisBuffers, tnow::Float64)
+    value_text[axis][] = format_values(axis, b)
     raw_obs[axis][] = Point2f.(b.raw_t, b.raw_v)
     cal_obs[axis][] = Point2f.(b.cal_t, b.cal_m)
     uncal_obs[axis][] = Point2f.(b.uncal_t, b.uncal_m)
