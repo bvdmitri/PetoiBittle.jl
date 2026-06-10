@@ -102,12 +102,23 @@ Runnable examples live in the `examples/` folder:
 - `2_simple_movement.jl` drives joints directly with `MoveJoints`.
 - `3_gyro_stats.jl` reads the IMU.
 - `4_high_level_verbs.jl` shows the high-level verb API end to end.
+- `5_live_imu_dashboard.jl` opens an interactive GLMakie dashboard with real-time Bayesian
+  inference of the IMU state using [RxInfer.jl](https://rxinfer.com). A stationary
+  calibration phase learns the per-axis sensor bias and noise, then two sliding-window
+  pipelines run side by side over the same live stream: a calibrated one and a deliberately
+  uncalibrated one, so the value of calibration is visible directly in the 3D orientation
+  view, the time-series charts, and the numeric readouts. The observation noise is learned
+  online with variational iterations. Configurable via command-line flags (see
+  `--help`), including a `--simulate` mode that runs without the robot.
 
 Run any of them by name, for example:
 
 ```bash
 julia --project=examples -e 'using Pkg; Pkg.instantiate()'
 julia --project=examples examples/4_high_level_verbs.jl
+
+# the live dashboard, without hardware:
+julia --project=examples examples/5_live_imu_dashboard.jl --simulate
 ```
 
 ## License
