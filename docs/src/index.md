@@ -104,11 +104,28 @@ baud_rate = 9600
     preferences. Changing one invalidates the precompilation cache, so you need to restart
     Julia for the new value to take effect.
 
+PetoiBittle also ships a [PrecompileTools.jl](https://github.com/JuliaLang/PrecompileTools.jl)
+workload that compiles and caches the command serialization, parsing, and dispatch machinery at
+precompilation time, so the first `send_command` is fast (this matters on low-power targets such
+as a Raspberry Pi). It is enabled by default and can be turned off with the same mechanism, for
+example in a headless CI environment:
+
+```julia
+using PetoiBittle, Preferences
+set_preferences!(PetoiBittle, "precompile_workload" => false)
+```
+
+```toml
+[PetoiBittle]
+precompile_workload = false
+```
+
 ```@docs
 PetoiBittle.BUFFER_CAPACITY
 PetoiBittle.BAUD_RATE
 PetoiBittle.MAX_RETRIES
 PetoiBittle.DEFAULT_TIMEOUT
+PetoiBittle.PRECOMPILE_WORKLOAD
 ```
 
 
