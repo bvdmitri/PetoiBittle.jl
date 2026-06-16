@@ -1,6 +1,6 @@
 name = "PetoiBittle"
 uuid = "5bc1ff43-7751-4008-a957-b2449cec208f"
-version = "1.1.0"
+version = "1.2.0"
 authors = ["Dmitry Bagaev <bvdmitri@gmail.com>"]
 
 [deps]

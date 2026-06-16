@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-06-16
+
+### Added
+
+- A [PrecompileTools.jl](https://github.com/JuliaLang/PrecompileTools.jl) workload that exercises
+  `send_command` through an in-memory fake serial port for a representative command of every
+  category, so the serialization, parsing, and dispatch code is compiled and cached into the
+  package image. This makes the first `send_command` fast (helpful on low-power targets such as a
+  Raspberry Pi), and downstream applications that build their own system image inherit the cached
+  code.
+- `PRECOMPILE_WORKLOAD` configurable constant (the `precompile_workload` preference, default
+  `true`) to disable the workload, for example in headless CI:
+  `set_preferences!(PetoiBittle, "precompile_workload" => false)`.
+
 ## [1.1.0] - 2026-06-09
 
 ### Added
@@ -53,5 +67,6 @@ Initial release.
 - Public API marked with the `public` keyword (via Compat.jl for Julia 1.10 support).
 - Documentation, doctests, and a test suite checked with Aqua.jl and JET.jl.
 
+[1.2.0]: https://github.com/bvdmitri/PetoiBittle.jl/releases/tag/v1.2.0
 [1.1.0]: https://github.com/bvdmitri/PetoiBittle.jl/releases/tag/v1.1.0
 [1.0.0]: https://github.com/bvdmitri/PetoiBittle.jl/releases/tag/v1.0.0
