@@ -28,6 +28,13 @@ directly with the convenience of expressive, readable commands.
   raw response, so nothing in the protocol is out of reach.
 - **Fast and predictable**: commands serialize into a preallocated buffer with zero allocation
   on the hot path; the verbs compile down to the exact same path.
+- **Fast startup**: a [PrecompileTools.jl](https://github.com/JuliaLang/PrecompileTools.jl)
+  workload caches the serialization, parsing, and dispatch code into the package image, so the
+  first `send_command` is fast (handy on low-power targets such as a Raspberry Pi). Disable it
+  with `set_preferences!(PetoiBittle, "precompile_workload" => false)` when you do not want the
+  extra precompilation cost. Downstream applications that build their own system image (for
+  example, on the Raspberry Pi or an `aarch64` runner, since Julia cannot cross-compile) inherit
+  this cached code automatically.
 - **Designed for testing**: a transport seam lets the whole suite run without hardware, and the
   code is checked with [Aqua.jl](https://github.com/JuliaTesting/Aqua.jl) and
   [JET.jl](https://github.com/aviatesk/JET.jl).

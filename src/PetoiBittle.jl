@@ -27,6 +27,10 @@ include("commands/generated/skills_generator.jl")
 # `PetoiBittle.connect` etc. The `public` keyword records these as public API without
 # importing them into the caller's namespace. `@compat` from Compat.jl lets us use it on
 # Julia 1.10 (the bare `public` keyword is only available on 1.11+).
+# Precompile workload: must come last so every command type defined above exists when the
+# workload drives `send_command` through a fake serial port (see src/precompile.jl).
+include("precompile.jl")
+
 using Compat
 @compat public connect, disconnect, find_bittle_port, is_bittle_port
 @compat public send_command, before_command, after_command, command_terminator
